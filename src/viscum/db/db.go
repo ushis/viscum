@@ -21,12 +21,18 @@ type DB interface {
   // Removes a subscription.
   Unsubscribe(email string, url string) (r sql.Result, err error)
 
+  // Lists subscriptions filtered by email.
+  ListSubscriptions(email string) (info string, err error)
+
   // Adds a new entry, checks the subscriptions and enqueues them.
   InsertEntry(e *Entry) (r sql.Result, err error)
 
   // Dequeues an entry. It removes the entry from queue, if processed is true.
   // If it is false it removes the pending flag from the entry.
   Dequeue(e *QueueEntry, processed bool) (r sql.Result, err error)
+
+  // Returns an array of info strings about all queue entries.
+  QueueInfo() (info string, err error)
 
   // Fetches new feeds and passes them to a handler function.
   FetchNewFeeds(age time.Time, handler func(id int64, url string)) (err error)

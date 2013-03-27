@@ -3,6 +3,10 @@
 --
 
 --
+-- SCHEMA
+--
+
+--
 -- emails
 --
 DROP TABLE IF EXISTS emails CASCADE;
@@ -73,6 +77,73 @@ CREATE TABLE queue (
 );
 
 --
+-- TYPES
+--
+
+--
+-- queue_entry
+--
+DROP TYPE IF EXISTS queue_entry CASCADE;
+
+CREATE TYPE queue_entry AS (
+  id          integer,
+  url         varchar,
+  title       varchar,
+  body        text,
+  email       varchar,
+  feed_title  varchar
+);
+
+--
+-- VIEWS
+--
+
+--
+-- queue_entries
+--
+DROP VIEW IF EXISTS queue_entries;
+
+CREATE VIEW queue_entries (id, url, title, body, email, feed_title) AS
+  SELECT queue.id       AS id,
+         entries.url    AS url,
+         entries.title  AS title,
+         entries.body   AS body,
+         emails.email   AS email,
+         feeds.title    AS feed_title
+    FROM queue
+      INNER JOIN emails ON emails.id = queue.email_id
+      INNER JOIN entries ON entries.id = entry_id
+      INNER JOIN feeds ON feeds.id = entries.feed_id
+        WHERE queue.pending = false
+          OR  now() - queue.updated_at > interval '1' hour;
+
+--
+-- queue_info
+--
+DROP VIEW IF EXISTS queue_info;
+
+CREATE VIEW queue_info (info) AS
+  SELECT emails.email || ' (' || COUNT(queue.id) || ')'
+    FROM queue
+      INNER JOIN emails ON emails.id = queue.email_id
+      GROUP BY emails.id;
+
+--
+-- subscripts
+--
+DROP VIEW IF EXISTS subscripts;
+
+CREATE VIEW subscripts (email, url) AS
+  SELECT emails.email, feeds.url
+    FROM subscriptions AS s
+      INNER JOIN emails ON emails.id = s.email_id
+      INNER JOIN feeds ON feeds.id = s.feed_id;
+
+--
+-- TRIGGER
+--
+
+--
 -- Updates created_at and updated_at.
 --
 DROP FUNCTION IF EXISTS update_timestamps();
@@ -89,9 +160,9 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
----
----
----
+--
+--
+--
 DROP TRIGGER IF EXISTS update_timestamps_trig ON emails;
 
 CREATE TRIGGER update_timestamps_trig BEFORE INSERT OR UPDATE ON emails
@@ -138,30 +209,20 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
----
---- enqueue_entry_trig
----
+--
+-- enqueue_entry_trig
+--
 DROP TRIGGER IF EXISTS enqueue_trig on entries;
 
 CREATE TRIGGER enqueue_trig AFTER INSERT ON entries
 FOR EACH ROW EXECUTE PROCEDURE enqueue();
 
 --
--- queue_entry
+-- FUNCTIONS
 --
-DROP TYPE IF EXISTS queue_entry CASCADE;
-
-CREATE TYPE queue_entry AS (
-  id          integer,
-  url         varchar,
-  title       varchar,
-  body        text,
-  email       varchar,
-  feed_title  varchar
-);
 
 --
---
+-- fetch_queue()
 --
 DROP FUNCTION IF EXISTS fetch_queue();
 
@@ -169,20 +230,7 @@ CREATE FUNCTION fetch_queue() RETURNS SETOF queue_entry AS $$
 DECLARE
   entry queue_entry%rowtype;
 BEGIN
-  FOR entry IN
-    SELECT queue.id       AS id,
-           entries.url    AS url,
-           entries.title  AS title,
-           entries.body   AS body,
-           emails.email   AS email,
-           feeds.title    AS feed_title
-      FROM queue
-      INNER JOIN emails ON emails.id = queue.email_id
-      INNER JOIN entries ON entries.id = entry_id
-      INNER JOIN feeds ON feeds.id = entries.feed_id
-        WHERE queue.pending = false
-          OR  now() - queue.updated_at > interval '1' hour
-  LOOP
+  FOR entry IN SELECT * FROM queue_entries LOOP
     UPDATE queue SET pending = true WHERE id = entry.id;
     RETURN NEXT entry;
   END LOOP;
@@ -191,7 +239,7 @@ END
 $$ LANGUAGE plpgsql;
 
 --
---
+-- dequeue()
 --
 DROP FUNCTION IF EXISTS dequeue(integer, boolean);
 

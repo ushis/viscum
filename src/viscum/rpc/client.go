@@ -2,6 +2,7 @@ package rpc
 
 import (
   "net/rpc"
+  "viscum/rpc/queue"
   "viscum/rpc/subscription"
 )
 
@@ -26,18 +27,27 @@ func (self *Client) Disconnect() error {
   return self.connection.Close()
 }
 
-// Subscribes an email to a feed.
-func (self *Client) Subscribe(email string, url string) (string, error) {
-  var reply subscription.Reply
-  args := &subscription.Args{Email: email, Url: url}
-  err := self.connection.Call("Service.Subscribe", args, &reply)
-  return reply.Reply, err
+// Subscribes a email to a feed.
+func (self *Client) Subscribe(email string, url string) (Reply, error) {
+  return subscription.Subscribe(self.connection, email, url)
 }
 
-// Unsubscribes an email to a feed.
-func (self *Client) Unsubscribe(email string, url string) (string, error) {
-  var reply subscription.Reply
-  args := &subscription.Args{Email: email, Url: url}
-  err := self.connection.Call("Service.Unsubscribe", args, &reply)
-  return reply.Reply, err
+// Unsubscribes an email from a feed.
+func (self *Client) Unsubscribe(email string, url string) (Reply, error) {
+  return subscription.Unsubscribe(self.connection, email, url)
+}
+
+// Fetches subscription info from the server.
+func (self *Client) SubscriptionInfo(email string) (Reply, error) {
+  return subscription.Info(self.connection, email)
+}
+
+// Fetches queue info from the server.
+func (self *Client) QueueInfo() (Reply, error) {
+  return queue.Info(self.connection)
+}
+
+// Attempt to send all remaining mail.
+func (self *Client) DeliverQueue() (Reply, error) {
+  return queue.Deliver(self.connection)
 }

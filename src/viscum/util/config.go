@@ -7,7 +7,7 @@ import (
 // Default configuration
 var defaults = map[string]map[string]string{
   "database": map[string]string{
-    "auth":   "dbname=viscum user=viscum password=secret host=localhost port5432",
+    "auth":   "dbname=viscum user=viscum password=secret host=localhost port=5432",
     "driver": "postgres",
   },
   "mailer": map[string]string{

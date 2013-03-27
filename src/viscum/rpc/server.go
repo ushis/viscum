@@ -5,6 +5,7 @@ import (
   "net/http"
   "net/rpc"
   "viscum/db"
+  "viscum/rpc/queue"
   "viscum/rpc/subscription"
   "viscum/util"
 )
@@ -19,6 +20,10 @@ type Server struct {
 
 // Returns a new RPC Server
 func New(database db.DB, sock string, mc chan int, fc chan int) *Server {
+  registerService(queue.New(database, mc))
+  registerService(subscription.New(database, fc))
+  rpc.HandleHTTP()
+
   return &Server{
     db:          database,
     socket:      sock,
@@ -31,12 +36,6 @@ func New(database db.DB, sock string, mc chan int, fc chan int) *Server {
 // Starts the rpc server.
 func (self *Server) Start() {
   util.Info("[RPC] Start...")
-
-  if err := rpc.Register(subscription.New(self.db, self.FetcherCtrl)); err != nil {
-    util.Fatal("[RPC]", err)
-  }
-  rpc.HandleHTTP()
-
   listener, err := net.Listen("unix", self.socket)
 
   if err != nil {
@@ -54,4 +53,11 @@ func (self *Server) Start() {
 // Commands the rpc to stop.
 func (self *Server) Stop() {
   self.Ctrl <- util.CTRL_STOP
+}
+
+// Registers a service.
+func registerService(name string, service interface{}) {
+  if err := rpc.RegisterName(name, service); err != nil {
+    util.Fatal(err)
+  }
 }

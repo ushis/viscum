@@ -17,14 +17,14 @@ var configFile string
 
 // Init flag parser.
 func init() {
-  flag.StringVar(&configFile, "config", util.CONF_FILE, "config file")
+  flag.StringVar(&configFile, "config", util.CONF_SERVER, "config file")
 }
 
 // Sets up everything and waits for SIGINT.
 func main() {
   flag.Parse()
 
-  // Read the config
+  // Read the config.
   conf, err := util.ReadConfig(configFile)
   if err != nil {
     util.Fatal(err)

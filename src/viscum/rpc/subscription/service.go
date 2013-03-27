@@ -7,22 +7,13 @@ import (
 )
 
 type Service struct {
-  db          db.DB    // Database connection
-  fetcherCtrl chan int // Control channel to the fetcher
-}
-
-type Args struct {
-  Email string // Email address
-  Url   string // Feed url
-}
-
-type Reply struct {
-  Reply string // Reply text
+  db   db.DB    // Database connection
+  ctrl chan int // Control channel to the fetcher
 }
 
 // Returns a new subscription service.
-func New(database db.DB, ctrl chan int) *Service {
-  return &Service{db: database, fetcherCtrl: ctrl}
+func New(database db.DB, ctrl chan int) (string, *Service) {
+  return "Subscription", &Service{db: database, ctrl: ctrl}
 }
 
 // Subscribes a email to a feed.
@@ -34,7 +25,7 @@ func (self *Service) Subscribe(args *Args, reply *Reply) error {
 
   reply.Reply = fmt.Sprintf("Subscribed %s to %s", args.Email, args.Url)
   util.Info("[RPC]", reply.Reply)
-  self.fetcherCtrl <- util.CTRL_RELOAD
+  self.ctrl <- util.CTRL_RELOAD
   return nil
 }
 
@@ -48,4 +39,15 @@ func (self *Service) Unsubscribe(args *Args, reply *Reply) error {
   reply.Reply = fmt.Sprintf("Unsubscribed %s from %s", args.Email, args.Url)
   util.Info("[RPC]", reply.Reply)
   return nil
+}
+
+// Lists subscriptions filtered by email.
+func (self *Service) Info(args *Args, reply *Reply) (err error) {
+  util.Info("[RPC] Fetch subscriptions for:", args.Email)
+  reply.Reply, err = self.db.ListSubscriptions(args.Email)
+
+  if err != nil {
+    util.Error("[RPC]", err)
+  }
+  return err
 }

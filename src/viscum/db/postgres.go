@@ -1,6 +1,7 @@
 package db
 
 import (
+  "bytes"
   "database/sql"
   _ "github.com/jbarham/gopgsqldriver"
   "time"
@@ -45,6 +46,11 @@ func (self *PgDB) Unsubscribe(email string, url string) (sql.Result, error) {
   return self.connection.Exec("SELECT unsubscribe($1, $2)", email, url)
 }
 
+//
+func (self *PgDB) ListSubscriptions(email string) (string, error) {
+  return self.info("SELECT url from subscripts WHERE email = $1", email)
+}
+
 // Inserts a new entry.
 func (self *PgDB) InsertEntry(e *Entry) (sql.Result, error) {
   return self.connection.Exec("SELECT insert_entry($1, $2, $3, $4, $5)",
@@ -54,6 +60,41 @@ func (self *PgDB) InsertEntry(e *Entry) (sql.Result, error) {
 // Dequeues an entry.
 func (self *PgDB) Dequeue(e *QueueEntry, success bool) (sql.Result, error) {
   return self.connection.Exec("SELECT dequeue($1, $2)", e.Id, success)
+}
+
+//
+func (self *PgDB) QueueInfo() (string, error) {
+  return self.info("SELECT info FROM queue_info")
+}
+
+func (self *PgDB) info(query string, args ...interface{}) (string, error) {
+  rows, err := self.connection.Query(query, args...)
+
+  if err != nil {
+    return "", err
+  }
+  defer rows.Close()
+
+  var buffer bytes.Buffer
+  i := 0
+
+  for rows.Next() {
+    var info string
+
+    if err := rows.Scan(&info); err != nil {
+      util.Error("[DB]", err)
+      continue
+    }
+
+    if i > 0 {
+      buffer.WriteByte('\n')
+    }
+
+    buffer.WriteString(info)
+    i++
+  }
+
+  return buffer.String(), rows.Err()
 }
 
 //

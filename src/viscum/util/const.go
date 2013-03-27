@@ -10,6 +10,9 @@ const (
   // Control Reload
   CTRL_RELOAD
 
-  // Default config file
-  CONF_FILE = "/etc/viscum.conf"
+  // Default client config file
+  CONF_CLIENT = "/etc/viscum/viscum.conf"
+
+  // Default server config file
+  CONF_SERVER = "/etc/viscum/viscumd.conf"
 )
