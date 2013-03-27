@@ -1,0 +1,9 @@
+# Vim
+*.swp
+*.swo
+
+# Build
+/build
+
+# godag
+*.6

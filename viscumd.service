@@ -1,0 +1,13 @@
+[Unit]
+Description=viscum RSS/ATOM fetching and processing server
+After=network.target postgresql.service postfix.service
+
+[Service]
+Type=simple
+User=viscum
+Group=viscum
+ExecStart=/usr/sbin/viscumd -config=/etc/viscum.conf
+ExecStop=/bin/kill -INT $MAINPID
+
+[Install]
+WantedBy=multi-user.target
