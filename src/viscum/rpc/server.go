@@ -5,6 +5,7 @@ import (
   "net/http"
   "net/rpc"
   "viscum/db"
+  "viscum/rpc/mem"
   "viscum/rpc/queue"
   "viscum/rpc/subscription"
   "viscum/util"
@@ -20,6 +21,7 @@ type Server struct {
 
 // Returns a new RPC Server
 func New(database db.DB, sock string, mc chan int, fc chan int) *Server {
+  registerService(mem.New())
   registerService(queue.New(database, mc))
   registerService(subscription.New(database, fc))
   rpc.HandleHTTP()

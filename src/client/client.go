@@ -24,6 +24,7 @@ var commands = map[string]func(*rpc.Client) (rpc.Reply, error){
   "ls":      subscriptions,
   "queue":   queue,
   "deliver": deliver,
+  "mem":     mem,
 }
 
 // Lets go.
@@ -96,6 +97,11 @@ func deliver(client *rpc.Client) (rpc.Reply, error) {
   return client.DeliverQueue()
 }
 
+// Fetches the servers mem stats.
+func mem(client *rpc.Client) (rpc.Reply, error) {
+  return client.MemStats()
+}
+
 // Prints the help message and exits.
 func usage() {
   fmt.Fprintf(os.Stderr, "Usage: %s <cmd> [options]\n", os.Args[0])
@@ -107,6 +113,7 @@ Commands:
   ls  <email>         List subscriptions filtered by email
   queue               Display queue info
   deliver             Attempt to deliver the whole queue
+  mem                 Display the servers memory stats
 
 Options:`)
 

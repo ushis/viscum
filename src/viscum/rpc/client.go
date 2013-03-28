@@ -2,6 +2,7 @@ package rpc
 
 import (
   "net/rpc"
+  "viscum/rpc/mem"
   "viscum/rpc/queue"
   "viscum/rpc/subscription"
 )
@@ -50,4 +51,9 @@ func (self *Client) QueueInfo() (Reply, error) {
 // Attempt to send all remaining mail.
 func (self *Client) DeliverQueue() (Reply, error) {
   return queue.Deliver(self.connection)
+}
+
+// Fetches mem stats from the server.
+func (self *Client) MemStats() (Reply, error) {
+  return mem.Stats(self.connection)
 }
