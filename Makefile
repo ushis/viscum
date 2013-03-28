@@ -48,4 +48,6 @@ install:
 	install -m600  etc/viscumd.conf $(DESTDIR)/etc/viscum/viscumd.conf
 	install -m644  etc/viscum.conf  $(DESTDIR)/etc/viscum/viscum.conf
 	install -dm755 $(DESTDIR)/usr/lib/systemd/system
-	install -m644 -t $(DESTDIR)/usr/lib/systemd/system etc/*.service
+	install -m644 -t $(DESTDIR)/usr/lib/systemd/system etc/systemd/*.service
+	install -dm755 $(DESTDIR)/usr/lib/tmpfiles.d
+	install -m644 -t $(DESTDIR)/usr/lib/tmpfiles.d etc/systemd/*.conf
