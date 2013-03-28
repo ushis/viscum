@@ -1,18 +1,17 @@
 # Viscum Makefile
 
 # Source and build directory.
-SRC   	:= 	src
-BUILD		:=	build
+SRC     :=  src
+BUILD   :=  build
 
 # Build targets.
-CLIENT  := 	$(BUILD)/viscum
-SERVER 	:= 	$(BUILD)/viscumd
+CLIENT  :=  $(BUILD)/viscum
+SERVER  :=  $(BUILD)/viscumd
 
 # External dependencies.
-PKGS    := 	github.com/jteeuwen/go-pkg-rss   \
+PKGS    :=  github.com/jteeuwen/go-pkg-rss   \
             github.com/jbarham/gopgsqldriver \
             code.google.com/p/goconf/conf
-
 
 .PHONY: all
 
@@ -37,3 +36,16 @@ pkgs:
 
 fmt:
 	gd $(SRC) -fmt -w2
+
+install:
+	install -dm755 $(DESTDIR)/usr/sbin
+	install -m755  $(SERVER) $(DESTDIR)/usr/sbin/viscumd
+	install -dm755 $(DESTDIR)/usr/bin
+	install -m755  $(CLIENT) $(DESTDIR)/usr/bin/viscum
+	install -dm755 $(DESTDIR)/usr/share/viscum
+	install -m644 -t $(DESTDIR)/usr/share/viscum share/*
+	install -dm755 $(DESTDIR)/etc/viscum
+	install -m600  etc/viscumd.conf $(DESTDIR)/etc/viscum/viscumd.conf
+	install -m644  etc/viscum.conf  $(DESTDIR)/etc/viscum/viscum.conf
+	install -dm755 $(DESTDIR)/usr/lib/systemd/system
+	install -m644 -t $(DESTDIR)/usr/lib/systemd/system etc/*.service
