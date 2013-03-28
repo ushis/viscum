@@ -1,10 +1,10 @@
 package rpc
 
 import (
-  "os"
   "net"
   "net/http"
   "net/rpc"
+  "os"
   "viscum/db"
   "viscum/rpc/mem"
   "viscum/rpc/queue"

@@ -5,7 +5,7 @@ import (
   "runtime"
 )
 
-type Service struct {}
+type Service struct{}
 
 // Returns a new service.
 func New() (string, *Service) {

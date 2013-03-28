@@ -1,3 +1,3 @@
 package mem
 
-type Args struct {}
+type Args struct{}
