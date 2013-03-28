@@ -291,6 +291,11 @@ BEGIN
   END IF;
 
   INSERT INTO subscriptions (email_id, feed_id) VALUES (email_id, feed_id);
+EXCEPTION
+  WHEN unique_violation THEN
+    RAISE EXCEPTION '% already subscribed to %', email_var, url_var;
+  WHEN check_violation THEN
+    RAISE EXCEPTION 'Invalid url: %', url_var;
 END
 $$ LANGUAGE plpgsql;
 
@@ -331,5 +336,11 @@ BEGIN
     INSERT INTO entries (feed_id, url, title, body)
     VALUES (feed_id_var, url_var, title_var, body_var);
   END IF;
+EXCEPTION
+  WHEN unique_violation THEN
+    RAISE EXCEPTION
+      'Entry is already in the database: (%, %)', feed_id_var, url_var;
+  WHEN check_violation THEN
+    RAISE EXCEPTION 'Invalid url: %', url_var;
 END
 $$ LANGUAGE plpgsql;
