@@ -7,7 +7,9 @@ post_install() {
     useradd -c 'viscum user' -g viscum -d / -s /sbin/nologin viscum
     passwd -l viscum >/dev/null
   fi
-  systemd-tmpfiles --create viscum.conf
+  chown viscum:viscum /etc/viscum/viscum.conf
+  chown viscum:viscum /etc/viscum/viscumd.conf
+  systemd-tmpfiles --create viscumd.conf
 }
 
 ## arg 1:  the old package version
