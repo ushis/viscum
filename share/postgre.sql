@@ -58,6 +58,8 @@ DROP TABLE IF EXISTS subscriptions CASCADE;
 CREATE TABLE subscriptions (
   email_id    integer REFERENCES emails (id),
   feed_id     integer REFERENCES feeds (id),
+  created_at  timestamp with time zone NOT NULL,
+  updated_at  timestamp with time zone NOT NULL,
   UNIQUE (email_id, feed_id)
 );
 
@@ -193,6 +195,14 @@ CREATE TRIGGER update_timestamps_trig BEFORE INSERT OR UPDATE ON queue
 FOR EACH ROW EXECUTE PROCEDURE update_timestamps();
 
 --
+--
+--
+DROP TRIGGER IF EXISTS update_timestamps_trig ON subscriptions;
+
+CREATE TRIGGER update_timestamps_trig BEFORE INSERT OR UPDATE ON subscriptions
+FOR EACH ROW EXECUTE PROCEDURE update_timestamps();
+
+--
 -- enqueue()
 --
 DROP FUNCTION IF EXISTS enqueue();
@@ -201,7 +211,11 @@ CREATE FUNCTION enqueue() RETURNS trigger AS $$
 DECLARE
   s RECORD;
 BEGIN
-  FOR s IN SELECT email_id FROM subscriptions WHERE feed_id = NEW.feed_id LOOP
+  FOR s IN
+    SELECT email_id FROM subscriptions
+      WHERE feed_id = NEW.feed_id
+        AND now() - created_at  > interval '1' minute
+    LOOP
     INSERT INTO queue (email_id, entry_id) VALUES (s.email_id, NEW.id);
   END LOOP;
 

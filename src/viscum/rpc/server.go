@@ -1,6 +1,7 @@
 package rpc
 
 import (
+  "os"
   "net"
   "net/http"
   "net/rpc"
@@ -45,6 +46,9 @@ func (self *Server) Start() {
   }
   defer listener.Close()
 
+  if err = os.Chmod(self.socket, 0770); err != nil {
+    util.Fatal("[RPC]", err)
+  }
   go http.Serve(listener, nil)
 
   // Wait
