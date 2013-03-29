@@ -39,7 +39,7 @@ func main() {
   defer database.Close()
 
   // Set up the mailer.
-  m := mailer.New(database, conf.Get("mailer", "command"))
+  m := mailer.New(database, conf)
   go m.Start()
 
   // Set up the fetcher.

@@ -1,21 +1,46 @@
 package mailer
 
 import (
-  "fmt"
-  "os/exec"
   "viscum/db"
   "viscum/util"
 )
 
 type Mailer struct {
-  db   db.DB    // Database connection
-  cmd  string   // Mail command
-  Ctrl chan int // Control channel
+  db      db.DB        // Database connection
+  conf    *util.Config // Config
+  Ctrl    chan int     // Control channel
+  handler Handler      // Mail handler
+  from    string       // Sender address
+}
+
+// Available handlers.
+var handlers = make(map[string]Handler)
+
+// Registers a new handler.
+func Register(name string, handler Handler) {
+  if _, dup := handlers[name]; dup {
+    util.Fatal("Handler registered twice:", name)
+  }
+  handlers[name] = handler
 }
 
 // Returns a new mailer.
-func New(database db.DB, cmd string) *Mailer {
-  return &Mailer{db: database, cmd: cmd, Ctrl: make(chan int)}
+func New(database db.DB, conf *util.Config) *Mailer {
+  name := conf.Get("mailer", "mailer")
+  handler, ok := handlers[name]
+
+  if !ok {
+    util.Fatal("Unknown mail handler:", name)
+  }
+  handler.Init(conf)
+
+  return &Mailer{
+    db:      database,
+    conf:    conf,
+    Ctrl:    make(chan int),
+    handler: handler,
+    from:    conf.Get("mailer", "from"),
+  }
 }
 
 // Starts the mailer.
@@ -23,8 +48,8 @@ func (self *Mailer) Start() {
   util.Info("[Mailer] Start...")
 
   for {
-    err := self.db.FetchQueue(func(entry *db.QueueEntry) {
-      self.handleQueueEntry(entry)
+    err := self.db.FetchQueue(func(entry *db.Entry) {
+      self.handleEntry(entry)
     })
 
     if err != nil {
@@ -46,41 +71,15 @@ func (self *Mailer) Stop() {
 }
 
 // Handles a queue entry.
-func (self *Mailer) handleQueueEntry(e *db.QueueEntry) {
+func (self *Mailer) handleEntry(e *db.Entry) {
   success := true
 
-  if err := self.send(e); err != nil {
+  if err := self.handler.Send(NewMail(e, self.from)); err != nil {
     success = false
     util.Error("[Mailer]", err)
   }
 
-  self.db.Dequeue(e, success)
-}
-
-// Sends the message.
-func (self *Mailer) send(e *db.QueueEntry) error {
-  subject := fmt.Sprintf("[%s] %s", e.FeedTitle, e.Title)
-  util.Info("[Mailer] Send:", e.Id, e.Email, subject)
-
-  cmd := exec.Command(self.cmd, "-s", subject, e.Email)
-  stdin, err := cmd.StdinPipe()
-
-  if err != nil {
-    return err
+  if _, err := self.db.Dequeue(e, success); err != nil {
+    util.Error("[Mailer]", err)
   }
-  if err = cmd.Start(); err != nil {
-    return err
-  }
-  if _, err = fmt.Fprintf(stdin, "%s\n\n%s\n%s\n\n", e.FeedTitle, e.Title, e.Url); err != nil {
-    stdin.Close()
-    return err
-  }
-  if _, err = fmt.Fprint(stdin, e.Body); err != nil {
-    stdin.Close()
-    return err
-  }
-  if err = stdin.Close(); err != nil {
-    return err
-  }
-  return cmd.Wait()
 }

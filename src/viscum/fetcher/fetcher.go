@@ -79,7 +79,9 @@ func (self *Fetcher) handleNewEntries(id int64, ch *rss.Channel, items []*rss.It
 
     if item.Content != nil {
       entry.Body = item.Content.Text
-    } else {
+    }
+
+    if len(entry.Body) == 0 {
       entry.Body = item.Description
     }
 

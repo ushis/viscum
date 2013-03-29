@@ -58,7 +58,7 @@ func (self *PgDB) InsertEntry(e *Entry) (sql.Result, error) {
 }
 
 // Dequeues an entry.
-func (self *PgDB) Dequeue(e *QueueEntry, success bool) (sql.Result, error) {
+func (self *PgDB) Dequeue(e *Entry, success bool) (sql.Result, error) {
   return self.connection.Exec("SELECT dequeue($1, $2)", e.Id, success)
 }
 
@@ -120,7 +120,7 @@ func (self *PgDB) FetchNewFeeds(t time.Time, handler func(int64, string)) error 
   return rows.Err()
 }
 
-func (self *PgDB) FetchQueue(handler func(*QueueEntry)) error {
+func (self *PgDB) FetchQueue(handler func(*Entry)) error {
   rows, err := self.connection.Query(
     "SELECT id, url, title, body, email, feed_title FROM fetch_queue()")
 
@@ -130,7 +130,7 @@ func (self *PgDB) FetchQueue(handler func(*QueueEntry)) error {
   defer rows.Close()
 
   for rows.Next() {
-    var e QueueEntry
+    var e Entry
     err := rows.Scan(&e.Id, &e.Url, &e.Title, &e.Body, &e.Email, &e.FeedTitle)
 
     if err != nil {

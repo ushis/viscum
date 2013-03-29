@@ -276,7 +276,6 @@ CREATE FUNCTION subscribe(email_var varchar, url_var varchar) RETURNS void AS $$
 DECLARE
   email_id      integer;
   feed_id       integer;
-  row_count     integer;
 BEGIN
   SELECT id INTO email_id FROM emails WHERE email = email_var LIMIT 1;
 

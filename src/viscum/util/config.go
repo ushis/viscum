@@ -11,7 +11,13 @@ var defaults = map[string]map[string]string{
     "driver": "postgres",
   },
   "mailer": map[string]string{
-    "command": "/usr/bin/mail",
+    "from":          "viscum@localhost",
+    "mailer":        "pipe",
+    "pipe":          "/usr/bin/mail",
+    "smtp_host":     "127.0.0.1",
+    "smtp_port":     "25",
+    "smtp_username": "viscum",
+    "smtp_password": "secret",
   },
   "rpc": map[string]string{
     "socket": "/run/viscum/viscum.sock",
