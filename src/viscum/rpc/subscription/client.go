@@ -22,6 +22,6 @@ func Unsubscribe(con *rpc.Client, email string, url string) (*Reply, error) {
 }
 
 // Fetches info from the server.
-func Info(con *rpc.Client, email string) (*Reply, error) {
-  return call(con, "Subscription.Info", email, "")
+func List(con *rpc.Client, email string) (*Reply, error) {
+  return call(con, "Subscription.List", email, "")
 }

@@ -17,6 +17,6 @@ func Deliver(c *rpc.Client) (*Reply, error) {
 }
 
 // Fetches queue info from the server.
-func Info(c *rpc.Client) (*Reply, error) {
-  return call(c, "Queue.Info")
+func List(c *rpc.Client) (*Reply, error) {
+  return call(c, "Queue.List")
 }

@@ -3,7 +3,7 @@ package subscription
 import (
   "fmt"
   "viscum/db"
-  "viscum/util"
+  . "viscum/util"
 )
 
 type Service struct {
@@ -19,35 +19,35 @@ func New(database db.DB, ctrl chan int) (string, *Service) {
 // Subscribes a email to a feed.
 func (self *Service) Subscribe(args *Args, reply *Reply) error {
   if _, err := self.db.Subscribe(args.Email, args.Url); err != nil {
-    util.Error("[RPC]", err)
+    Error("[RPC]", err)
     return err
   }
 
   reply.Reply = fmt.Sprintf("Subscribed %s to %s", args.Email, args.Url)
-  util.Info("[RPC]", reply.Reply)
-  self.ctrl <- util.CTRL_RELOAD
+  Info("[RPC]", reply.Reply)
+  self.ctrl <- CTRL_RELOAD
   return nil
 }
 
 // Unsubscribes a email from a feed.
 func (self *Service) Unsubscribe(args *Args, reply *Reply) error {
   if _, err := self.db.Unsubscribe(args.Email, args.Url); err != nil {
-    util.Error("[RPC]", err)
+    Error("[RPC]", err)
     return err
   }
 
   reply.Reply = fmt.Sprintf("Unsubscribed %s from %s", args.Email, args.Url)
-  util.Info("[RPC]", reply.Reply)
+  Info("[RPC]", reply.Reply)
   return nil
 }
 
 // Lists subscriptions filtered by email.
-func (self *Service) Info(args *Args, reply *Reply) (err error) {
-  util.Info("[RPC] Fetch subscriptions for:", args.Email)
+func (self *Service) List(args *Args, reply *Reply) (err error) {
+  Info("[RPC] Fetch subscriptions for:", args.Email)
   reply.Reply, err = self.db.ListSubscriptions(args.Email)
 
   if err != nil {
-    util.Error("[RPC]", err)
+    Error("[RPC]", err)
   }
   return err
 }

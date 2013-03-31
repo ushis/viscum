@@ -1,23 +1,12 @@
 package mailer
 
 import (
-  "html/template"
+  "fmt"
   "io"
   "net/textproto"
   "time"
   "viscum/db"
 )
-
-var tmpl = template.Must(template.New("mail").Parse(
-  `{{.FeedTitle}}
-
-{{.Title}}
-{{.Url}}
-
-{{.Body}}
-
-Proudly delivered by viscum.
-`))
 
 type Mail struct {
   *db.Entry
@@ -60,5 +49,10 @@ func (self *Mail) WriteHeaders(w io.Writer) error {
 }
 
 func (self *Mail) WriteBody(w io.Writer) error {
-  return tmpl.Execute(w, self)
+  if _, err := fmt.Fprintf(w, "%s\n\n%s\n%s\n\n", self.FeedTitle, self.Title, self.Url); err != nil {
+    return err
+  }
+
+  _, err := w.Write([]byte(self.Body))
+  return err
 }

@@ -2,7 +2,7 @@ package mailer
 
 import (
   "os/exec"
-  "viscum/util"
+  . "viscum/util"
 )
 
 type Pipe struct {
@@ -15,13 +15,13 @@ func init() {
 }
 
 // Configures the pipe.
-func (self *Pipe) Init(conf *util.Config) {
-  self.cmd = conf.Get("mailer", "pipe")
+func (self *Pipe) Init(conf *Config) {
+  self.cmd = conf.Get("mail", "pipe")
 }
 
 // Sends the message.
 func (self *Pipe) Send(mail *Mail) error {
-  util.Info("[Pipe] Send:", mail.Id, mail.Email, mail.Title)
+  Info("[Pipe] Send:", mail.Id, mail.Email, mail.Title)
 
   cmd := exec.Command(self.cmd, "-s", mail.GetHeader("Subject"), mail.Email)
   stdin, err := cmd.StdinPipe()

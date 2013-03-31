@@ -84,12 +84,12 @@ func subscriptions(client *rpc.Client) (rpc.Reply, error) {
   if flag.NArg() < 2 {
     usage()
   }
-  return client.SubscriptionInfo(flag.Arg(1))
+  return client.ListSubscriptions(flag.Arg(1))
 }
 
 // Fetches queue info.
 func queue(client *rpc.Client) (rpc.Reply, error) {
-  return client.QueueInfo()
+  return client.ListQueue()
 }
 
 // Attempt to process the queue.

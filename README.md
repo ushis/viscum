@@ -12,13 +12,13 @@ Lets see how overengineered it is.
                      +--------------------------------------+
                           |               |             |
                           |         +-----------+       |         +----------+
-                          |         |           |<--<--<|-<--<--<-| RSS/ATOM |
-                     +----------+   |  Fetcher  |   +-------+     +----------+
-    +-----------+    |          |<--|           |<--|       |
-    |  Postfix  |<---|  Mailer  |   +-----------+   |  RPC  |     +----------+
-    +-----------+    |          |<--------|---------|       |<--->|  viscum  |
-    (or a script)    +----------+         |         +-------+     +----------+
-                          |               |             |
+      +--------+          |         |           |<--<--<|-<--<--<-| RSS/ATOM |
+      |  SMTP  |<-+  +----------+   |  Fetcher  |   +-------+     +----------+
+      +--------+  |  |          |<--|           |<--|       |
+                  +--|  Mailer  |   +-----------+   |  RPC  |     +----------+
+      +--------+  |  |          |<--------|---------|       |<--->|  viscum  |
+      |  Pipe  |<-+  +----------+         |         +-------+     +----------+
+      +--------+          |               |             |
                      +--------------------------------------+
                      |                PostgreSQL            |
                      +--------------------------------------+
@@ -30,7 +30,7 @@ Lets see how overengineered it is.
    notifies the Mailer about new stuff in the queue.
 
 1. The Mailer looks into the queue and sends new entries to an external
-   program (e.g. mail).
+   program (e.g. mail) or to a SMTP server.
 
 1. The RPC waits for a viscum client to add/rm subscriptions, send control
    instructions or request some info.

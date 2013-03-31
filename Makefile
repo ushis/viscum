@@ -11,7 +11,8 @@ SERVER  :=  $(BUILD)/viscumd
 # External dependencies.
 PKGS    :=  github.com/jteeuwen/go-pkg-rss   \
             github.com/jbarham/gopgsqldriver \
-            code.google.com/p/goconf/conf
+            code.google.com/p/goconf/conf    \
+            github.com/moovweb/gokogiri
 
 .PHONY: all
 

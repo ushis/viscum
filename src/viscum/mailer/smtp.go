@@ -3,7 +3,7 @@ package mailer
 import (
   "bytes"
   "net/smtp"
-  "viscum/util"
+  . "viscum/util"
 )
 
 type Smtp struct {
@@ -19,11 +19,11 @@ func init() {
 }
 
 // Configures the handler.
-func (self *Smtp) Init(conf *util.Config) {
-  self.host = conf.Get("mailer", "smtp_host")
-  self.addr = self.host + ":" + conf.Get("mailer", "smtp_port")
-  self.user = conf.Get("mailer", "smtp_username")
-  self.passwd = conf.Get("mailer", "smtp_password")
+func (self *Smtp) Init(conf *Config) {
+  self.host = conf.Get("mail", "smtp_host")
+  self.addr = self.host + ":" + conf.Get("mail", "smtp_port")
+  self.user = conf.Get("mail", "smtp_username")
+  self.passwd = conf.Get("mail", "smtp_password")
 }
 
 // Sends a mail.

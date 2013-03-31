@@ -39,13 +39,13 @@ func (self *Client) Unsubscribe(email string, url string) (Reply, error) {
 }
 
 // Fetches subscription info from the server.
-func (self *Client) SubscriptionInfo(email string) (Reply, error) {
-  return subscription.Info(self.connection, email)
+func (self *Client) ListSubscriptions(email string) (Reply, error) {
+  return subscription.List(self.connection, email)
 }
 
 // Fetches queue info from the server.
-func (self *Client) QueueInfo() (Reply, error) {
-  return queue.Info(self.connection)
+func (self *Client) ListQueue() (Reply, error) {
+  return queue.List(self.connection)
 }
 
 // Attempt to send all remaining mail.

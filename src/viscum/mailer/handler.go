@@ -1,10 +1,10 @@
 package mailer
 
 import (
-  "viscum/util"
+  . "viscum/util"
 )
 
 type Handler interface {
-  Init(conf *util.Config) // Configures the handler
+  Init(conf *Config)      // Configures the handler
   Send(entry *Mail) error // Sends the mail.
 }

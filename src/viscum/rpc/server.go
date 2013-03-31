@@ -9,7 +9,7 @@ import (
   "viscum/rpc/mem"
   "viscum/rpc/queue"
   "viscum/rpc/subscription"
-  "viscum/util"
+  . "viscum/util"
 )
 
 type Server struct {
@@ -38,32 +38,32 @@ func New(database db.DB, sock string, mc chan int, fc chan int) *Server {
 
 // Starts the rpc server.
 func (self *Server) Start() {
-  util.Info("[RPC] Start...")
+  Info("[RPC] Start...")
   listener, err := net.Listen("unix", self.socket)
 
   if err != nil {
-    util.Fatal("[RPC]", err)
+    Fatal("[RPC]", err)
   }
   defer listener.Close()
 
   if err = os.Chmod(self.socket, 0770); err != nil {
-    util.Fatal("[RPC]", err)
+    Fatal("[RPC]", err)
   }
   go http.Serve(listener, nil)
 
   // Wait
   <-self.Ctrl
-  util.Info("[RPC] Stop...")
+  Info("[RPC] Stop...")
 }
 
 // Commands the rpc to stop.
 func (self *Server) Stop() {
-  self.Ctrl <- util.CTRL_STOP
+  self.Ctrl <- CTRL_STOP
 }
 
 // Registers a service.
 func registerService(name string, service interface{}) {
   if err := rpc.RegisterName(name, service); err != nil {
-    util.Fatal(err)
+    Fatal(err)
   }
 }

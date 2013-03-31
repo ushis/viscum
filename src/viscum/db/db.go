@@ -3,7 +3,7 @@ package db
 import (
   "database/sql"
   "time"
-  "viscum/util"
+  . "viscum/util"
 )
 
 // Database interface.
@@ -47,7 +47,7 @@ var databases = make(map[string]DB)
 // Registers a database.
 func Register(name string, db DB) {
   if _, dup := databases[name]; dup {
-    util.Fatal("[DB] Database registered twice:", name)
+    Fatal("[DB] Database registered twice:", name)
   }
   databases[name] = db
 }
@@ -57,7 +57,7 @@ func New(name string) DB {
   db, ok := databases[name]
 
   if !ok {
-    util.Fatal("[DB] Couldn't find database:", name)
+    Fatal("[DB] Couldn't find database:", name)
   }
 
   return db

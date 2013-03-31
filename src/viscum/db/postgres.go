@@ -5,7 +5,7 @@ import (
   "database/sql"
   _ "github.com/jbarham/gopgsqldriver"
   "time"
-  "viscum/util"
+  . "viscum/util"
 )
 
 const (
@@ -82,7 +82,7 @@ func (self *PgDB) info(query string, args ...interface{}) (string, error) {
     var info string
 
     if err := rows.Scan(&info); err != nil {
-      util.Error("[DB]", err)
+      Error("[DB]", err)
       continue
     }
 
@@ -111,7 +111,7 @@ func (self *PgDB) FetchNewFeeds(t time.Time, handler func(int64, string)) error 
     var url string
 
     if err := rows.Scan(&id, &url); err != nil {
-      util.Error("[DB]", err)
+      Error("[DB]", err)
       continue
     }
 
@@ -134,7 +134,7 @@ func (self *PgDB) FetchQueue(handler func(*Entry)) error {
     err := rows.Scan(&e.Id, &e.Url, &e.Title, &e.Body, &e.Email, &e.FeedTitle)
 
     if err != nil {
-      util.Error("[DB]", err)
+      Error("[DB]", err)
       continue
     }
 
