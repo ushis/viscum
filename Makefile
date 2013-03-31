@@ -16,18 +16,12 @@ PKGS    :=  github.com/jteeuwen/go-pkg-rss   \
 
 .PHONY: all
 
-all: server client
+all: builddir pkgs
+	gd $(SRC) -o $(SERVER) -M ^server
+	gd $(SRC) -o $(CLIENT) -M ^client
 
 clean:
 	gd clean $(SRC)
-
-server: env
-	gd $(SRC) -o $(SERVER) -M ^server
-
-client: env
-	gd $(SRC) -o $(CLIENT) -M ^client
-
-env: builddir pkgs
 
 builddir:
 	mkdir -p build
