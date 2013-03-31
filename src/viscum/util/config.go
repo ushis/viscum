@@ -10,7 +10,7 @@ var defaults = map[string]map[string]string{
     "auth":   "dbname=viscum user=viscum password=secret host=localhost port=5432",
     "driver": "postgres",
   },
-  "mailer": map[string]string{
+  "mail": map[string]string{
     "from":          "viscum@localhost",
     "mailer":        "pipe",
     "pipe":          "/usr/bin/mail",
