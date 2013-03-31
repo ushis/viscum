@@ -21,8 +21,6 @@ func (self *Pipe) Init(conf *Config) {
 
 // Sends the message.
 func (self *Pipe) Send(mail *Mail) error {
-  Info("[Pipe] Send:", mail.Id, mail.Email, mail.Title)
-
   cmd := exec.Command(self.cmd, "-s", mail.GetHeader("Subject"), mail.Email)
   stdin, err := cmd.StdinPipe()
 

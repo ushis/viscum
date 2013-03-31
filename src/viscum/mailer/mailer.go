@@ -72,6 +72,7 @@ func (self *Mailer) Stop() {
 
 // Handles a queue entry.
 func (self *Mailer) handleEntry(e *db.Entry) {
+  Info("[Mailer] Send:", e.Id, e.Email, e.Title)
   success := true
 
   if err := self.handler.Send(NewMail(e, self.from)); err != nil {
