@@ -48,7 +48,12 @@ func (self *PgDB) Unsubscribe(email string, url string) (sql.Result, error) {
 
 //
 func (self *PgDB) ListSubscriptions(email string) (string, error) {
-  return self.info("SELECT url from subscripts WHERE email = $1", email)
+  s, i, err := self.info("SELECT url from subscripts WHERE email = $1", email)
+
+  if err == nil && i == 0 {
+    return "Couldn't find any subscriptions for: " + email, nil
+  }
+  return s, err
 }
 
 // Inserts a new entry.
@@ -64,14 +69,19 @@ func (self *PgDB) Dequeue(e *Entry, success bool) (sql.Result, error) {
 
 //
 func (self *PgDB) QueueInfo() (string, error) {
-  return self.info("SELECT info FROM queue_info")
+  s, i, err := self.info("SELECT info FROM queue_info")
+
+  if err == nil && i == 0 {
+    return "The queue is empty.", nil
+  }
+  return s, err
 }
 
-func (self *PgDB) info(query string, args ...interface{}) (string, error) {
-  rows, err := self.connection.Query(query, args...)
+func (self *PgDB) info(q string, args ...interface{}) (string, int, error) {
+  rows, err := self.connection.Query(q, args...)
 
   if err != nil {
-    return "", err
+    return "", 0, err
   }
   defer rows.Close()
 
@@ -94,7 +104,7 @@ func (self *PgDB) info(query string, args ...interface{}) (string, error) {
     i++
   }
 
-  return buffer.String(), rows.Err()
+  return buffer.String(), i, rows.Err()
 }
 
 //

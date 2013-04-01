@@ -3,13 +3,11 @@ package util
 import (
   "bytes"
   "fmt"
-  "github.com/moovweb/gokogiri/html"
-  "github.com/moovweb/gokogiri/xml"
+  "github.com/moovweb/gokogiri"
 )
 
 func Text(src string) (string, error) {
-  doc, err := html.ParseFragment([]byte(src), html.DefaultEncodingBytes, nil,
-    html.DefaultParseOption, xml.DefaultEncodingBytes)
+  doc, err := gokogiri.ParseHtml([]byte(src))
 
   if err != nil {
     return "", err
@@ -17,8 +15,14 @@ func Text(src string) (string, error) {
 
   links := []string{}
 
+  nodes, _ := doc.Search(".//br")
+
+  for _, node := range nodes {
+    node.Replace("\n")
+  }
+
   // Replace image tags.
-  nodes, _ := doc.Search(".//img")
+  nodes, _ = doc.Search(".//img")
 
   for _, node := range nodes {
     attr := node.Attributes()
@@ -51,10 +55,17 @@ func Text(src string) (string, error) {
   }
 
   // Bold
-  nodes, _ = doc.Search(".//b|.//strong|.//h1|.//h2|.//h3|.//h4|.//h5|.//h6")
+  nodes, _ = doc.Search(".//b|.//strong|")
 
   for _, node := range nodes {
     node.Replace("*" + node.Content() + "*")
+  }
+
+  // Headlines
+  nodes, _ = doc.Search(".//h1|.//h2|.//h3|.//h4|.//h5|.//h6")
+
+  for _, node := range nodes {
+    node.SetContent("# " + node.Content())
   }
 
   // Quotes
