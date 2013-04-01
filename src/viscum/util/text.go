@@ -84,9 +84,11 @@ var bold = map[string]bool{
 
 func Text(src string) (string, error) {
   doc, err := gokogiri.ParseHtml([]byte(src))
+
   if err != nil {
     return "", err
   }
+  defer doc.Free()
 
   f := new(Formatter)
   f.walk(doc.Node)
