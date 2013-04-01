@@ -4,84 +4,193 @@ import (
   "bytes"
   "fmt"
   "github.com/moovweb/gokogiri"
+  "github.com/moovweb/gokogiri/xml"
+  "strings"
 )
+
+type Formatter struct {
+  buf   bytes.Buffer
+  links []string
+}
+
+var whitespace = map[byte]bool{
+  ' ':  true,
+  '\n': true,
+  '\r': true,
+  '\t': true,
+  '\v': true,
+}
+
+var ignore = map[string]bool{
+  "audio":  true,
+  "head":   true,
+  "script": true,
+  "track":  true,
+  "video":  true,
+}
+
+var block = map[string]bool{
+  "address":    true,
+  "article":    true,
+  "aside":      true,
+  "blockquote": true,
+  "body":       true,
+  "canvas":     true,
+  "del":        true,
+  "div":        true,
+  "dl":         true,
+  "fieldset":   true,
+  "figcaption": true,
+  "figure":     true,
+  "footer":     true,
+  "form":       true,
+  "header":     true,
+  "hgroup":     true,
+  "hr":         true,
+  "ins":        true,
+  "menu":       true,
+  "noscript":   true,
+  "ol":         true,
+  "output":     true,
+  "p":          true,
+  "section":    true,
+  "table":      true,
+  "td":         true,
+  "tfoot":      true,
+  "th":         true,
+  "thead":      true,
+  "tr":         true,
+  "ul":         true,
+}
+
+var heading = map[string]bool{
+  "h1": true,
+  "h2": true,
+  "h3": true,
+  "h4": true,
+  "h5": true,
+  "h6": true,
+}
+
+var italic = map[string]bool{
+  "em": true,
+  "i":  true,
+}
+
+var bold = map[string]bool{
+  "b":      true,
+  "strong": true,
+}
 
 func Text(src string) (string, error) {
   doc, err := gokogiri.ParseHtml([]byte(src))
-
   if err != nil {
     return "", err
   }
 
-  links := []string{}
+  f := new(Formatter)
+  f.walk(doc.Node)
 
-  nodes, _ := doc.Search(".//br")
-
-  for _, node := range nodes {
-    node.Replace("\n")
+  for i, link := range f.links {
+    f.buf.WriteString(fmt.Sprintf("[%d] %s\n", i, link))
   }
 
-  // Replace image tags.
-  nodes, _ = doc.Search(".//img")
+  return f.buf.String(), nil
+}
 
-  for _, node := range nodes {
-    attr := node.Attributes()
-    alt, aok := attr["alt"]
-    src, sok := attr["src"]
+func (self *Formatter) walk(node xml.Node) {
+  for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+    self.walk(c)
+  }
 
-    if !aok || !sok {
-      continue
+  if node.NodeType() == xml.XML_ELEMENT_NODE {
+    self.handleNode(node)
+  }
+}
+
+func (self *Formatter) handleNode(node xml.Node) {
+  name := node.Name()
+
+  switch {
+  case ignore[name]:
+    node.SetContent("")
+  case name == "pre":
+    self.writeCodeBlock(node)
+  case heading[name]:
+    self.writeBlock(node, "# ")
+  case name == "li":
+    self.writeBlock(node, "- ")
+  case name == "br":
+    node.SetContent("\n")
+  case italic[name]:
+    node.SetContent("/" + node.Content() + "/")
+  case bold[name]:
+    node.SetContent("*" + node.Content() + "*")
+  case name == "img":
+    alt, src := node.Attr("alt"), node.Attr("src")
+
+    if len(alt) > 0 && len(src) > 0 {
+      node.SetContent(fmt.Sprintf("(%s)[%d]", alt, len(self.links)))
+      self.links = append(self.links, src)
     }
+  case name == "a":
+    href := node.Attr("href")
 
-    node.Replace(fmt.Sprintf("(%s)[%d]", alt.Content(), len(links)))
-    links = append(links, src.Content())
+    if len(href) > 0 {
+      node.SetContent(fmt.Sprintf("%s[%d]", node.Content(), len(self.links)))
+      self.links = append(self.links, href)
+    }
+  case block[name]:
+    self.writeBlock(node, "")
   }
+}
 
-  // replace anchors.
-  nodes, _ = doc.Search(".//a")
+func (self *Formatter) writeBlock(node xml.Node, prefix string) {
+  sp, br, max := 0, 0, 79-len(prefix)
+  block := []byte(strings.TrimSpace(node.Content()))
+  node.SetContent("")
 
-  for _, node := range nodes {
-    if href, ok := node.Attributes()["href"]; ok {
-      links = append(links, href.Content())
-      node.Replace(fmt.Sprintf("%s[%d]", node.Content(), len(links)))
+  if len(block) == 0 {
+    return
+  }
+  self.buf.WriteString(prefix)
+
+  for i, c := range block {
+    if i-br > max && sp > br {
+      self.buf.WriteByte('\n')
+      br = sp
+
+      for j := 0; j < len(prefix); j++ {
+        self.buf.WriteByte(' ')
+      }
+    }
+    if whitespace[c] {
+      if sp == i {
+        sp++
+        br++
+        continue
+      }
+      self.buf.Write(block[sp:i])
+      self.buf.WriteByte(' ')
+      sp = i + 1
     }
   }
 
-  // Italic
-  nodes, _ = doc.Search(".//i|.//em")
-
-  for _, node := range nodes {
-    node.Replace("/" + node.Content() + "/")
+  if sp < len(block) {
+    self.buf.Write(block[sp:])
   }
+  self.buf.Write([]byte{'\n', '\n'})
+}
 
-  // Bold
-  nodes, _ = doc.Search(".//b|.//strong|")
+func (self *Formatter) writeCodeBlock(node xml.Node) {
+  block := []byte(node.Content())
+  node.SetContent("")
 
-  for _, node := range nodes {
-    node.Replace("*" + node.Content() + "*")
+  for i := len(block) - 1; i >= 0; i-- {
+    if !whitespace[block[i]] {
+      self.buf.Write(block[:i+1])
+      self.buf.Write([]byte{'\n', '\n'})
+      return
+    }
   }
-
-  // Headlines
-  nodes, _ = doc.Search(".//h1|.//h2|.//h3|.//h4|.//h5|.//h6")
-
-  for _, node := range nodes {
-    node.SetContent("# " + node.Content())
-  }
-
-  // Quotes
-  nodes, _ = doc.Search(".//blockquote/*")
-
-  for _, node := range nodes {
-    node.SetContent("> " + node.Content())
-  }
-
-  var buf bytes.Buffer
-  buf.WriteString(doc.Content())
-  buf.Write([]byte{'\n', '\n'})
-
-  for i, link := range links {
-    buf.WriteString(fmt.Sprintf("[%d] %s\n", i, link))
-  }
-
-  return buf.String(), nil
 }
