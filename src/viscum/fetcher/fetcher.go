@@ -8,13 +8,13 @@ import (
 )
 
 type Fetcher struct {
-  db         db.DB    // Database connection
-  Ctrl       chan int // Control channel
-  MailerCtrl chan int // Control channel to the mailer
+  db         db.DB      // Database connection
+  Ctrl       chan int   // Control channel
+  MailerCtrl chan<- int // Control channel to the mailer
 }
 
 // Returns a new fetcher.
-func New(database db.DB, mc chan int) *Fetcher {
+func New(database db.DB, mc chan<- int) *Fetcher {
   return &Fetcher{db: database, Ctrl: make(chan int), MailerCtrl: mc}
 }
 
@@ -35,7 +35,7 @@ func (self *Fetcher) Start() {
     }
 
     // Wait for instructions.
-    if ctrl := <-self.Ctrl; ctrl == CTRL_STOP {
+    if CTRL_STOP == <-self.Ctrl {
       break
     }
   }
@@ -50,20 +50,17 @@ func (self *Fetcher) Stop() {
 
 // Starts fetching a new feed.
 func (self *Fetcher) fetch(id int64, url string) {
-  handler := func(_ *rss.Feed, channel *rss.Channel, items []*rss.Item) {
-    self.handleNewEntries(id, channel, items)
-  }
+  Info("[Fetcher] Start fetching:", url)
 
-  feed := rss.New(5, true, nil, handler)
+  f := rss.New(5, true, nil, func(_ *rss.Feed, c *rss.Channel, i []*rss.Item) {
+    self.handleNewEntries(id, c, i)
+  })
 
   for {
-    Info("[Fetcher] Fetch:", url)
-
-    if err := feed.Fetch(url, nil); err != nil {
+    if err := f.Fetch(url, nil); err != nil {
       Error("[Fetcher]", err)
     }
-
-    <-time.After(time.Duration(feed.SecondsTillUpdate() * 1e9))
+    <-time.After(time.Duration(f.SecondsTillUpdate() * 1e9))
   }
 }
 
@@ -85,14 +82,12 @@ func (self *Fetcher) handleNewEntries(id int64, ch *rss.Channel, items []*rss.It
       entry.Body = item.Description
     }
 
-    var err error
-
-    if entry.Body, err = Text(entry.Body); err != nil {
+    if err := Format(&entry.Body); err != nil {
       Error("[Fetcher]", err)
       return
     }
 
-    if _, err = self.db.InsertEntry(&entry); err != nil {
+    if _, err := self.db.InsertEntry(&entry); err != nil {
       Error("[Fetcher]", err)
       return
     }

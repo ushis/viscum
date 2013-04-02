@@ -57,7 +57,7 @@ func (self *Mailer) Start() {
     }
 
     // Wait for instructions.
-    if ctrl := <-self.Ctrl; ctrl == CTRL_STOP {
+    if CTRL_STOP == <-self.Ctrl {
       break
     }
   }

@@ -7,12 +7,12 @@ import (
 )
 
 type Service struct {
-  db   db.DB    // Database connection
-  ctrl chan int // Control channel to the fetcher
+  db   db.DB      // Database connection
+  ctrl chan<- int // Control channel to the fetcher
 }
 
 // Returns a new subscription service.
-func New(database db.DB, ctrl chan int) (string, *Service) {
+func New(database db.DB, ctrl chan<- int) (string, *Service) {
   return "Subscription", &Service{db: database, ctrl: ctrl}
 }
 

@@ -13,15 +13,15 @@ import (
 )
 
 type Server struct {
-  db          db.DB    // Database connection
-  socket      string   // Rpc socket
-  Ctrl        chan int // Control channel
-  MailerCtrl  chan int // Control channel to the mailer
-  FetcherCtrl chan int // Control channel to the fetcher
+  db          db.DB      // Database connection
+  socket      string     // Rpc socket
+  Ctrl        chan int   // Control channel
+  MailerCtrl  chan<- int // Control channel to the mailer
+  FetcherCtrl chan<- int // Control channel to the fetcher
 }
 
 // Returns a new RPC Server
-func New(database db.DB, sock string, mc chan int, fc chan int) *Server {
+func New(database db.DB, sock string, mc chan<- int, fc chan<- int) *Server {
   registerService(mem.New())
   registerService(queue.New(database, mc))
   registerService(subscription.New(database, fc))

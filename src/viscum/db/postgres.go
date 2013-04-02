@@ -17,7 +17,7 @@ const (
 
 // Postgres database.
 type PgDB struct {
-  connection *sql.DB
+  *sql.DB
 }
 
 // Register init function.
@@ -27,23 +27,29 @@ func init() {
 
 // Opens the connection using the postgres driver.
 func (self *PgDB) Open(auth string) (err error) {
-  self.connection, err = sql.Open("postgres", auth)
+  self.DB, err = sql.Open("postgres", auth)
   return err
-}
-
-// Closes the connection.
-func (self *PgDB) Close() error {
-  return self.connection.Close()
 }
 
 // Inserts a new subscription.
 func (self *PgDB) Subscribe(email string, url string) (sql.Result, error) {
-  return self.connection.Exec("SELECT subscribe($1, $2)", email, url)
+  return self.Exec("SELECT subscribe($1, $2)", email, url)
 }
 
 // Removes a subscription.
 func (self *PgDB) Unsubscribe(email string, url string) (sql.Result, error) {
-  return self.connection.Exec("SELECT unsubscribe($1, $2)", email, url)
+  return self.Exec("SELECT unsubscribe($1, $2)", email, url)
+}
+
+// Inserts a new entry.
+func (self *PgDB) InsertEntry(e *Entry) (sql.Result, error) {
+  return self.Exec("SELECT insert_entry($1, $2, $3, $4, $5)",
+    e.Url, e.Title, e.Body, e.FeedId, e.FeedTitle)
+}
+
+// Dequeues an entry.
+func (self *PgDB) Dequeue(e *Entry, success bool) (sql.Result, error) {
+  return self.Exec("SELECT dequeue($1, $2)", e.Id, success)
 }
 
 //
@@ -54,17 +60,6 @@ func (self *PgDB) ListSubscriptions(email string) (string, error) {
     return "Couldn't find any subscriptions for: " + email, nil
   }
   return s, err
-}
-
-// Inserts a new entry.
-func (self *PgDB) InsertEntry(e *Entry) (sql.Result, error) {
-  return self.connection.Exec("SELECT insert_entry($1, $2, $3, $4, $5)",
-    e.Url, e.Title, e.Body, e.FeedId, e.FeedTitle)
-}
-
-// Dequeues an entry.
-func (self *PgDB) Dequeue(e *Entry, success bool) (sql.Result, error) {
-  return self.connection.Exec("SELECT dequeue($1, $2)", e.Id, success)
 }
 
 //
@@ -78,7 +73,7 @@ func (self *PgDB) QueueInfo() (string, error) {
 }
 
 func (self *PgDB) info(q string, args ...interface{}) (string, int, error) {
-  rows, err := self.connection.Query(q, args...)
+  rows, err := self.Query(q, args...)
 
   if err != nil {
     return "", 0, err
@@ -109,7 +104,7 @@ func (self *PgDB) info(q string, args ...interface{}) (string, int, error) {
 
 //
 func (self *PgDB) FetchNewFeeds(t time.Time, handler func(int64, string)) error {
-  rows, err := self.connection.Query("SELECT id, url FROM feeds WHERE created_at > $1", t.Format(PG_TIME_FMT))
+  rows, err := self.Query("SELECT id, url FROM feeds WHERE created_at > $1", t.Format(PG_TIME_FMT))
 
   if err != nil {
     return err
@@ -131,8 +126,7 @@ func (self *PgDB) FetchNewFeeds(t time.Time, handler func(int64, string)) error 
 }
 
 func (self *PgDB) FetchQueue(handler func(*Entry)) error {
-  rows, err := self.connection.Query(
-    "SELECT id, url, title, body, email, feed_title FROM fetch_queue()")
+  rows, err := self.Query("SELECT id, url, title, body, email, feed_title FROM fetch_queue()")
 
   if err != nil {
     return err

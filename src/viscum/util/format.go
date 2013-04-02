@@ -82,11 +82,11 @@ var bold = map[string]bool{
   "strong": true,
 }
 
-func Text(src string) (string, error) {
-  doc, err := gokogiri.ParseHtml([]byte(src))
+func Format(src *string) error {
+  doc, err := gokogiri.ParseHtml([]byte(*src))
 
   if err != nil {
-    return "", err
+    return err
   }
   defer doc.Free()
 
@@ -97,7 +97,8 @@ func Text(src string) (string, error) {
     f.buf.WriteString(fmt.Sprintf("[%d] %s\n", i, link))
   }
 
-  return f.buf.String(), nil
+  *src = f.buf.String()
+  return nil
 }
 
 func (self *Formatter) walk(node xml.Node) {

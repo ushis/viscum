@@ -5,7 +5,7 @@ viscum is a RSS/ATOM fetching and processing server powered by
 
 ## Architecture
 
-Lets see how overengineered it is.
+Let's see how overengineered it is.
 
                      +--------------------------------------+
                      |                 viscumd              |
@@ -58,7 +58,7 @@ Edit the config ```etc/viscumd.conf```, start the server...
 
     ./build/viscum -config=etc/viscum.conf add hello@example.com https://github.com/blog.atom
 
-Arch Linux user can grabit from the
+Arch Linux user can grab it from the
 [AUR](https://aur.archlinux.org/packages/viscum-git/).
 
 ## TODO
