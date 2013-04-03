@@ -10,7 +10,7 @@ func Titleize(src string) string {
   sp, end := 0, len(src)
 
   for ; end > 0; end-- {
-    if ! unicode.IsSpace(rune(src[end-1])) {
+    if !unicode.IsSpace(rune(src[end-1])) {
       break
     }
   }
@@ -18,7 +18,7 @@ func Titleize(src string) string {
   var buf bytes.Buffer
 
   for i, c := range src[:end] {
-    if ! unicode.IsSpace(c) {
+    if !unicode.IsSpace(c) {
       buf.WriteRune(c)
       continue
     }

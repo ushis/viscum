@@ -20,8 +20,8 @@ func New(database db.DB, mc chan<- int) *Fetcher {
 
 // Starts fetching.
 func (self *Fetcher) Start() {
-  var lastUpdate time.Time
   Info("[Fetcher] Start...")
+  var lastUpdate time.Time
 
   for {
     err := self.db.FetchNewFeeds(lastUpdate, func(id int64, url string) {
@@ -68,8 +68,8 @@ func (self *Fetcher) fetch(id int64, url string) {
 func (self *Fetcher) handleNewEntries(id int64, ch *rss.Channel, items []*rss.Item) {
   for _, item := range items {
     entry := db.Entry{
-      Title: Titleize(item.Title),
-      FeedId: id,
+      Title:     Titleize(item.Title),
+      FeedId:    id,
       FeedTitle: Titleize(ch.Title),
     }
 
