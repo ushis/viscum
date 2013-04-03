@@ -67,7 +67,11 @@ func (self *Fetcher) fetch(id int64, url string) {
 // Handles new entries.
 func (self *Fetcher) handleNewEntries(id int64, ch *rss.Channel, items []*rss.Item) {
   for _, item := range items {
-    entry := db.Entry{Title: item.Title, FeedId: id, FeedTitle: ch.Title}
+    entry := db.Entry{
+      Title: Titleize(item.Title),
+      FeedId: id,
+      FeedTitle: Titleize(ch.Title),
+    }
 
     // FIXME Find the correct link to the article.
     if len(item.Links) > 0 {

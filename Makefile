@@ -32,6 +32,9 @@ pkgs:
 fmt:
 	gd $(SRC) -fmt -w2
 
+test:
+	gd $(SRC) test
+
 install:
 	install -dm755 $(DESTDIR)/usr/sbin
 	install -m755  $(SERVER) $(DESTDIR)/usr/sbin/viscumd

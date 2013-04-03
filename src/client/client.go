@@ -37,10 +37,6 @@ func main() {
     util.Fatal(err)
   }
 
-  if flag.NArg() < 1 {
-    usage()
-  }
-
   // Find the correct function for the command.
   cmd, ok := commands[flag.Arg(0)]
   if !ok {
