@@ -19,7 +19,11 @@ func NewClient(socket string) *Client {
 
 // Connects to the rpc server.
 func (self *Client) Connect() (err error) {
-  self.connection, err = rpc.DialHTTP("unix", self.socket)
+  if len(self.socket) > 0 && self.socket[0] != '/' {
+    self.connection, err = rpc.DialHTTP("tcp", self.socket)
+  } else {
+    self.connection, err = rpc.DialHTTP("unix", self.socket)
+  }
   return err
 }
 

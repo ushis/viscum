@@ -39,16 +39,14 @@ func New(database db.DB, sock string, mc chan<- int, fc chan<- int) *Server {
 // Starts the rpc server.
 func (self *Server) Start() {
   Info("[RPC] Start...")
-  listener, err := net.Listen("unix", self.socket)
+
+  listener, err := self.listen()
 
   if err != nil {
     Fatal("[RPC]", err)
   }
   defer listener.Close()
 
-  if err = os.Chmod(self.socket, 0770); err != nil {
-    Fatal("[RPC]", err)
-  }
   go http.Serve(listener, nil)
 
   // Wait
@@ -59,6 +57,19 @@ func (self *Server) Start() {
 // Commands the rpc to stop.
 func (self *Server) Stop() {
   self.Ctrl <- CTRL_STOP
+}
+
+// Returns a new socket listener.
+func (self *Server) listen() (net.Listener, error) {
+  if len(self.socket) > 0 && self.socket[0] != '/' {
+    return net.Listen("tcp", self.socket)
+  }
+  listener, err := net.Listen("unix", self.socket)
+
+  if err != nil {
+    return listener, err
+  }
+  return listener, os.Chmod(self.socket, 0770)
 }
 
 // Registers a service.
