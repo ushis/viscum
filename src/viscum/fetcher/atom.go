@@ -30,16 +30,16 @@ func (self *Atom) process(node *xmlx.Node) error {
 
     e := &db.Entry{
       Sha1:  sum,
-      Title: node.S(ns, "title"),
-      Body:  node.S(ns, "content"),
+      Title: entry.S(ns, "title"),
+      Body:  entry.S(ns, "content"),
     }
 
-    if l := node.SelectNode(ns, "link"); l != nil {
+    if l := entry.SelectNode(ns, "link"); l != nil {
       e.Url = l.As("", "href")
     }
 
     if len(e.Body) == 0 {
-      e.Body = node.S(ns, "summary")
+      e.Body = entry.S(ns, "summary")
     }
 
     if err := self.entryHandler(e); err != nil {
