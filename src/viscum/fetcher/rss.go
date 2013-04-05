@@ -22,7 +22,7 @@ func (self *Rss) process(node *xmlx.Node) error {
   self.Title = node.S(ns, "title")
 
   for _, entry := range node.SelectNodes(ns, "item") {
-    sum, err := Sha1Sum(entry.String())
+    sum, err := Sha1Sum(entry.Bytes())
 
     if err != nil {
       Error("[RSS]", err)

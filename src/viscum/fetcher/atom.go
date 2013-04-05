@@ -17,7 +17,7 @@ func (self *Atom) process(node *xmlx.Node) error {
   self.Title = node.S(ns, "title")
 
   for _, entry := range node.SelectNodes(ns, "entry") {
-    sum, err := Sha1Sum(entry.String())
+    sum, err := Sha1Sum(entry.Bytes())
 
     if err != nil {
       Error("[Atom]", err)
