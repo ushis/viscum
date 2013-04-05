@@ -42,7 +42,7 @@ func (self *Feed) Fetch() error {
 //
 func (self *Feed) processAtom(node *xmlx.Node) {
   ns := "http://www.w3.org/2005/Atom"
-  self.Title = node.S(ns, "title")
+  self.Title = Titleize(node.S(ns, "title"))
 
   for _, entry := range node.SelectNodes(ns, "entry") {
     url := self.extractAtomUrl(ns, entry)
@@ -53,7 +53,7 @@ func (self *Feed) processAtom(node *xmlx.Node) {
 
     e := &db.Entry{
       Url:   url,
-      Title: entry.S(ns, "title"),
+      Title: Titleize(entry.S(ns, "title")),
       Body:  entry.S(ns, "content"),
     }
 
@@ -95,7 +95,7 @@ func (self *Feed) processRss(node *xmlx.Node) {
   if ch == nil {
     return
   }
-  self.Title = node.S(ns, "title")
+  self.Title = Titleize(node.S(ns, "title"))
 
   for _, entry := range node.SelectNodes(ns, "item") {
     url := entry.S(ns, "link")
@@ -106,7 +106,7 @@ func (self *Feed) processRss(node *xmlx.Node) {
 
     e := &db.Entry{
       Url:   url,
-      Title: entry.S(ns, "title"),
+      Title: Titleize(entry.S(ns, "title")),
       Body:  entry.S(ns, "description"),
     }
 
