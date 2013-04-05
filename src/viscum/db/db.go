@@ -24,21 +24,24 @@ type DB interface {
   // Lists subscriptions filtered by email.
   ListSubscriptions(email string) (info string, err error)
 
+  // Updates a feed.
+  UpdateFeed(f *Feed) (r sql.Result, err error)
+
   // Adds a new entry, checks the subscriptions and enqueues them.
-  InsertEntry(e *Entry) (r sql.Result, err error)
+  InsertEntry(feedId int64, e *Entry) (r sql.Result, err error)
 
   // Dequeues an entry. It removes the entry from queue, if processed is true.
   // If it is false it removes the pending flag from the entry.
-  Dequeue(e *Entry, processed bool) (r sql.Result, err error)
+  Dequeue(e *QueueEntry, processed bool) (r sql.Result, err error)
 
   // Returns an array of info strings about all queue entries.
   QueueInfo() (info string, err error)
 
   // Fetches new feeds and passes them to a handler function.
-  FetchNewFeeds(age time.Time, handler func(id int64, url string)) (err error)
+  FetchNewFeeds(age time.Time, handler func(feed *Feed)) (err error)
 
   // Fetches queue entries and passes them to a handler function.
-  FetchQueue(handler func(entry *Entry)) (err error)
+  FetchQueue(handler func(entry *QueueEntry)) (err error)
 }
 
 // Map of all registered databases.
@@ -59,6 +62,5 @@ func New(name string) DB {
   if !ok {
     Fatal("[DB] Couldn't find database:", name)
   }
-
   return db
 }

@@ -137,10 +137,10 @@ func (self *Formatter) handleNode(node xml.Node) {
       self.links = append(self.links, src)
     }
   case name == "a":
-    href := node.Attr("href")
+    href, content := node.Attr("href"), node.Content()
 
-    if len(href) > 0 {
-      node.SetContent(fmt.Sprintf("%s[%d]", node.Content(), len(self.links)))
+    if len(href) > 0 && len(content) > 0 {
+      node.SetContent(fmt.Sprintf("%s[%d]", content, len(self.links)))
       self.links = append(self.links, href)
     }
   case block[name]:

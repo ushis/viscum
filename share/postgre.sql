@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS feeds CASCADE;
 CREATE TABLE feeds (
   id          serial  PRIMARY KEY,
   url         varchar NOT NULL,
+  sha1        varchar,
   title       varchar,
   created_at  timestamp with time zone NOT NULL,
   updated_at  timestamp with time zone NOT NULL,
@@ -41,13 +42,13 @@ DROP TABLE IF EXISTS entries CASCADE;
 CREATE TABLE entries (
   id          serial  PRIMARY KEY,
   feed_id     integer REFERENCES feeds (id),
-  url         varchar NOT NULL,
+  sha1        varchar NOT NULL,
+  url         varchar,
   title       varchar,
   body        text,
   created_at  timestamp with time zone NOT NULL,
   updated_at  timestamp with time zone NOT NULL,
-  CHECK (url ~ '\Ahttps?://'),
-  UNIQUE (feed_id, url)
+  UNIQUE (feed_id, sha1)
 );
 
 --
@@ -316,30 +317,22 @@ $$ LANGUAGE plpgsql;
 --
 --
 --
-DROP FUNCTION IF EXISTS insert_entry(varchar, varchar, text, integer, varchar);
+DROP FUNCTION IF EXISTS insert_entry(integer, varchar, varchar, varchar, text);
 
 CREATE FUNCTION insert_entry(
+  feed_id_var    integer,
+  sha1_var       varchar,
   url_var        varchar,
   title_var      varchar,
-  body_var       text,
-  feed_id_var    integer,
-  feed_title_var varchar
+  body_var       text
 )
 RETURNS void AS $$
 BEGIN
-  PERFORM 1 FROM entries WHERE feed_id = feed_id_var AND url = url_var LIMIT 1;
+  PERFORM 1 FROM entries WHERE feed_id = feed_id_var AND sha1 = sha1_var LIMIT 1;
 
   IF NOT FOUND THEN
-    UPDATE feeds SET title = feed_title_var WHERE id = feed_id_var;
-
-    INSERT INTO entries (feed_id, url, title, body)
-    VALUES (feed_id_var, url_var, title_var, body_var);
+    INSERT INTO entries (feed_id, sha1, url, title, body)
+      VALUES (feed_id_var, sha1_var, url_var, title_var, body_var);
   END IF;
-EXCEPTION
-  WHEN unique_violation THEN
-    RAISE EXCEPTION
-      'Entry is already in the database: (%, %)', feed_id_var, url_var;
-  WHEN check_violation THEN
-    RAISE EXCEPTION 'Invalid url: %', url_var;
 END
 $$ LANGUAGE plpgsql;

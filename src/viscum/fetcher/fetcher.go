@@ -1,7 +1,6 @@
 package fetcher
 
 import (
-  rss "github.com/jteeuwen/go-pkg-rss"
   "time"
   "viscum/db"
   . "viscum/util"
@@ -24,8 +23,8 @@ func (self *Fetcher) Start() {
   var lastUpdate time.Time
 
   for {
-    err := self.db.FetchNewFeeds(lastUpdate, func(id int64, url string) {
-      self.fetch(id, url)
+    err := self.db.FetchNewFeeds(lastUpdate, func(feed *db.Feed) {
+      self.fetch(feed)
     })
 
     if err != nil {
@@ -49,53 +48,32 @@ func (self *Fetcher) Stop() {
 }
 
 // Starts fetching a new feed.
-func (self *Fetcher) fetch(id int64, url string) {
-  Info("[Fetcher] Start fetching:", url)
+func (self *Fetcher) fetch(f *db.Feed) {
+  Info("[Fetcher] Start fetching:", f.Url)
 
-  f := rss.New(5, true, nil, func(_ *rss.Feed, c *rss.Channel, i []*rss.Item) {
-    self.handleNewEntries(id, c, i)
+  feed := NewFeed(f, func(entry *db.Entry) error {
+    return self.handleEntry(f.Id, entry)
   })
 
   for {
-    if err := f.Fetch(url, nil); err != nil {
+    if err := feed.Fetch(); err != nil {
+      Error("[Fetcher]", err)
+    } else if _, err := self.db.UpdateFeed(feed.Feed); err != nil {
       Error("[Fetcher]", err)
     }
-    <-time.After(time.Duration(f.SecondsTillUpdate() * 1e9))
+    <-time.After(5 * time.Minute)
   }
 }
 
-// Handles new entries.
-func (self *Fetcher) handleNewEntries(id int64, ch *rss.Channel, items []*rss.Item) {
-  for _, item := range items {
-    entry := db.Entry{
-      Title:     Titleize(item.Title),
-      FeedId:    id,
-      FeedTitle: Titleize(ch.Title),
-    }
-
-    // FIXME Find the correct link to the article.
-    if len(item.Links) > 0 {
-      entry.Url = item.Links[0].Href
-    }
-
-    if item.Content != nil {
-      entry.Body = item.Content.Text
-    }
-
-    if len(entry.Body) == 0 {
-      entry.Body = item.Description
-    }
-
-    if err := Format(&entry.Body); err != nil {
-      Error("[Fetcher]", err)
-      return
-    }
-
-    if _, err := self.db.InsertEntry(&entry); err != nil {
-      Error("[Fetcher]", err)
-      return
-    }
-
-    self.MailerCtrl <- CTRL_RELOAD
+// Handles a new entry.
+func (self *Fetcher) handleEntry(feedId int64, entry *db.Entry) error {
+  if err := Format(&entry.Body); err != nil {
+    return err
   }
+
+  if _, err := self.db.InsertEntry(feedId, entry); err != nil {
+    return err
+  }
+  self.MailerCtrl <- CTRL_RELOAD
+  return nil
 }

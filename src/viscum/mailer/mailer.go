@@ -48,7 +48,7 @@ func (self *Mailer) Start() {
   Info("[Mailer] Start...")
 
   for {
-    err := self.db.FetchQueue(func(entry *db.Entry) {
+    err := self.db.FetchQueue(func(entry *db.QueueEntry) {
       self.handleEntry(entry)
     })
 
@@ -71,7 +71,7 @@ func (self *Mailer) Stop() {
 }
 
 // Handles a queue entry.
-func (self *Mailer) handleEntry(e *db.Entry) {
+func (self *Mailer) handleEntry(e *db.QueueEntry) {
   Info("[Mailer] Send:", e.Id, e.Email, e.Title)
   success := true
 

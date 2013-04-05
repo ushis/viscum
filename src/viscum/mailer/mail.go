@@ -9,16 +9,16 @@ import (
 )
 
 type Mail struct {
-  *db.Entry                   // The entry to mail
-  From      string            // Sender address
-  headers   map[string]string // Mail headers
+  *db.QueueEntry                   // The entry to mail
+  From           string            // Sender address
+  headers        map[string]string // Mail headers
 }
 
 // Returns a new mail.
-func NewMail(e *db.Entry, from string) *Mail {
+func NewMail(e *db.QueueEntry, from string) *Mail {
   return &Mail{
-    Entry: e,
-    From:  from,
+    QueueEntry: e,
+    From:       from,
     headers: map[string]string{
       "Content-Type": "text/plain; charset=UTF-8",
       "Date":         time.Now().Format(time.RFC1123Z),

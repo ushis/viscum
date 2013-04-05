@@ -9,7 +9,7 @@ CLIENT  :=  $(BUILD)/viscum
 SERVER  :=  $(BUILD)/viscumd
 
 # External dependencies.
-PKGS    :=  github.com/jteeuwen/go-pkg-rss   \
+PKGS    :=  github.com/jteeuwen/go-pkg-xmlx  \
             github.com/jbarham/gopgsqldriver \
             code.google.com/p/goconf/conf    \
             github.com/moovweb/gokogiri
