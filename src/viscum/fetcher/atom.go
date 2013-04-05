@@ -25,6 +25,7 @@ func (self *Atom) process(node *xmlx.Node) error {
     }
 
     if self.entries[sum] {
+      sums[sum] = true
       continue
     }
 
