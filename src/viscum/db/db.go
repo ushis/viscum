@@ -2,6 +2,7 @@ package db
 
 import (
   "database/sql"
+  "io"
   "time"
   . "viscum/util"
 )
@@ -21,8 +22,8 @@ type DB interface {
   // Removes a subscription.
   Unsubscribe(email string, url string) (r sql.Result, err error)
 
-  // Lists subscriptions filtered by email.
-  ListSubscriptions(email string) (info string, err error)
+  // Writes all subscriptions filtered by email to a writer.
+  ListSubscriptions(w io.Writer, email string) (err error)
 
   // Updates a feed.
   UpdateFeed(f *Feed) (r sql.Result, err error)
@@ -34,8 +35,8 @@ type DB interface {
   // If it is false it removes the pending flag from the entry.
   Dequeue(e *QueueEntry, processed bool) (r sql.Result, err error)
 
-  // Returns an array of info strings about all queue entries.
-  QueueInfo() (info string, err error)
+  // Writes queue info to the writer.
+  QueueInfo(w io.Writer) (err error)
 
   // Fetches new feeds and passes them to a handler function.
   FetchNewFeeds(age time.Time, handler func(feed *Feed)) (err error)

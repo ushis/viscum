@@ -55,7 +55,7 @@ func main() {
   if reply, err := cmd(client); err != nil {
     util.Fatal(err)
   } else {
-    fmt.Println(reply.Text())
+    fmt.Print(reply.Text())
   }
 }
 

@@ -1,6 +1,7 @@
 package subscription
 
 import (
+  "bytes"
   "fmt"
   "viscum/db"
   . "viscum/util"
@@ -23,7 +24,7 @@ func (self *Service) Subscribe(args *Args, reply *Reply) error {
     return err
   }
 
-  reply.Reply = fmt.Sprintf("Subscribed %s to %s", args.Email, args.Url)
+  reply.Reply = fmt.Sprintf("Subscribed %s to %s\n", args.Email, args.Url)
   Info("[RPC]", reply.Reply)
   self.ctrl <- CTRL_RELOAD
   return nil
@@ -36,7 +37,7 @@ func (self *Service) Unsubscribe(args *Args, reply *Reply) error {
     return err
   }
 
-  reply.Reply = fmt.Sprintf("Unsubscribed %s from %s", args.Email, args.Url)
+  reply.Reply = fmt.Sprintf("Unsubscribed %s from %s\n", args.Email, args.Url)
   Info("[RPC]", reply.Reply)
   return nil
 }
@@ -44,10 +45,13 @@ func (self *Service) Unsubscribe(args *Args, reply *Reply) error {
 // Lists subscriptions filtered by email.
 func (self *Service) List(args *Args, reply *Reply) (err error) {
   Info("[RPC] Fetch subscriptions for:", args.Email)
-  reply.Reply, err = self.db.ListSubscriptions(args.Email)
+  var buf bytes.Buffer
 
-  if err != nil {
+  if err := self.db.ListSubscriptions(&buf, args.Email); err != nil {
     Error("[RPC]", err)
+    return err
   }
-  return err
+
+  reply.Reply = buf.String()
+  return nil
 }

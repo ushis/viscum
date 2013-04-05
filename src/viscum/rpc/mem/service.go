@@ -16,6 +16,6 @@ func New() (string, *Service) {
 func (self *Service) Stats(_ *Args, reply *Reply) error {
   m := new(runtime.MemStats)
   runtime.ReadMemStats(m)
-  reply.Reply = fmt.Sprintf("Sys: %d Heap: %d", m.Sys, m.HeapAlloc)
+  reply.Reply = fmt.Sprintf("Sys: %d Heap: %d\n", m.Sys, m.HeapAlloc)
   return nil
 }
