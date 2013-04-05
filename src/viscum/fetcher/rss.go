@@ -13,7 +13,7 @@ type Rss struct {
 
 func (self *Rss) process(node *xmlx.Node) error {
   ns := "*"
-  sums := make(map[string]bool)
+  urls := make(map[string]bool)
   ch := node.SelectNode(ns, "channel")
 
   if ch == nil {
@@ -22,21 +22,15 @@ func (self *Rss) process(node *xmlx.Node) error {
   self.Title = node.S(ns, "title")
 
   for _, entry := range node.SelectNodes(ns, "item") {
-    sum, err := Sha1Sum(entry.Bytes())
+    url := entry.S(ns, "link")
 
-    if err != nil {
-      Error("[RSS]", err)
-      continue
-    }
-
-    if self.entries[sum] {
-      sums[sum] = true
+    if len(url) == 0 || self.entries[url] {
+      urls[url] = true
       continue
     }
 
     e := &db.Entry{
-      Sha1:  sum,
-      Url:   entry.S(ns, "link"),
+      Url:   url,
       Title: entry.S(ns, "title"),
       Body:  entry.S(ns, "description"),
     }
@@ -46,9 +40,9 @@ func (self *Rss) process(node *xmlx.Node) error {
       continue
     }
 
-    sums[e.Sha1] = true
+    urls[url] = true
   }
 
-  self.entries = sums
+  self.entries = urls
   return nil
 }
