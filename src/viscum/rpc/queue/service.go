@@ -34,6 +34,6 @@ func (self *Service) List(_ *Args, reply *Reply) (err error) {
 func (self *Service) Deliver(_ *Args, reply *Reply) error {
   Info("[RPC] Hey Mailer! Wake up!")
   self.ctrl <- CTRL_RELOAD
-  reply.Reply = "Initiated queue delivery.\n"
+  reply.Reply = "Initiated queue delivery."
   return nil
 }

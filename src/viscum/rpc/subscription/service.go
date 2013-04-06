@@ -24,7 +24,7 @@ func (self *Service) Subscribe(args *Args, reply *Reply) error {
     return err
   }
 
-  reply.Reply = fmt.Sprintf("Subscribed %s to %s\n", args.Email, args.Url)
+  reply.Reply = fmt.Sprintf("Subscribed %s to %s", args.Email, args.Url)
   Info("[RPC]", reply.Reply)
   self.ctrl <- CTRL_RELOAD
   return nil
@@ -37,7 +37,7 @@ func (self *Service) Unsubscribe(args *Args, reply *Reply) error {
     return err
   }
 
-  reply.Reply = fmt.Sprintf("Unsubscribed %s from %s\n", args.Email, args.Url)
+  reply.Reply = fmt.Sprintf("Unsubscribed %s from %s", args.Email, args.Url)
   Info("[RPC]", reply.Reply)
   return nil
 }

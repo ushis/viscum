@@ -292,7 +292,7 @@ BEGIN
   INSERT INTO subscriptions (email_id, feed_id) VALUES (email_id, feed_id);
 EXCEPTION
   WHEN unique_violation THEN
-    RAISE EXCEPTION '% already subscribed to %', email_var, url_var;
+    RETURN;
   WHEN check_violation THEN
     RAISE EXCEPTION 'Invalid url: %', url_var;
 END

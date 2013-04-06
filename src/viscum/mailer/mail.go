@@ -45,21 +45,23 @@ func (self *Mail) GetHeader(k string) string {
 }
 
 // Writes headers to a io.Writer.
-func (self *Mail) WriteHeaders(w io.Writer) error {
+func (self *Mail) WriteHeaders(w io.Writer) (err error) {
   for k, v := range self.headers {
-    if _, err := w.Write([]byte(k + ": " + v + "\r\n")); err != nil {
-      return err
+    if _, err = w.Write([]byte(k + ": " + v + "\r\n")); err != nil {
+      return
     }
   }
-  return nil
+  return
 }
 
 // Writes the body to a io.Writer.
-func (self *Mail) WriteBody(w io.Writer) error {
-  if _, err := fmt.Fprintf(w, "%s\n\n%s\n%s\n\n", self.FeedTitle, self.Title, self.Url); err != nil {
-    return err
+func (self *Mail) WriteBody(w io.Writer) (err error) {
+  _, err = fmt.Fprintf(w, "%s\n\n%s\n%s\n\n", self.FeedTitle, self.Title, self.Url)
+
+  if err != nil {
+    return
   }
 
-  _, err := w.Write([]byte(self.Body))
-  return err
+  _, err = w.Write(self.Body)
+  return
 }

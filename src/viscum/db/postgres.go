@@ -3,7 +3,7 @@ package db
 import (
   "database/sql"
   "fmt"
-  _ "github.com/jbarham/gopgsqldriver"
+  _ "github.com/ushis/gopgsqldriver"
   "io"
   "reflect"
   "time"
@@ -16,6 +16,9 @@ const (
   // See http://golang.org/src/pkg/time/format.go#L9
   PG_TIME_FMT = "2006-01-02 15:04:05.000000Z0700"
 )
+
+// Function that handles rows fetched by PgDB.query().
+type RowHandler func(*sql.Rows) error
 
 // Postgres database.
 type PgDB struct {
@@ -63,7 +66,7 @@ func (self *PgDB) ListSubscriptions(w io.Writer, email string) error {
   i, err := self.info(w, "SELECT url from subscripts WHERE email = $1", email)
 
   if err == nil && i == 0 {
-    fmt.Fprintln(w, "Couldn't find any subscriptions for:", email)
+    _, err = fmt.Fprint(w, "Couldn't find any subscriptions for: ", email)
   }
   return err
 }
@@ -73,7 +76,7 @@ func (self *PgDB) QueueInfo(w io.Writer) error {
   i, err := self.info(w, "SELECT info FROM queue_info")
 
   if err == nil && i == 0 {
-    fmt.Fprintln(w, "The queue is empty.")
+    _, err = fmt.Fprint(w, "The queue is empty.")
   }
   return err
 }
@@ -81,14 +84,13 @@ func (self *PgDB) QueueInfo(w io.Writer) error {
 // Fetches feeds newer than the provided timestamp and passes them to handler
 // in separate goroutines.
 func (self *PgDB) FetchNewFeeds(t time.Time, handler func(*Feed)) error {
-  return self.query(func(r *sql.Rows) {
+  return self.query(func(r *sql.Rows) error {
     var title interface{}
 
     f := new(Feed)
 
     if err := r.Scan(&f.Id, &f.Url, &title); err != nil {
-      Error("[DB]", err)
-      return
+      return err
     }
 
     if title != nil {
@@ -96,28 +98,25 @@ func (self *PgDB) FetchNewFeeds(t time.Time, handler func(*Feed)) error {
     }
 
     go handler(f)
+
+    return nil
   }, "SELECT id, url, title FROM feeds WHERE created_at > $1", t.Format(PG_TIME_FMT))
 }
 
 // Fetches unprocessed queue entries and passes them to the handler in
 // separate goroutines.
 func (self *PgDB) FetchQueue(handler func(*QueueEntry)) error {
-  return self.query(func(r *sql.Rows) {
-    var title, body, fTitle interface{}
+  return self.query(func(r *sql.Rows) error {
+    var title, fTitle interface{}
 
     e := &QueueEntry{Entry: new(Entry)}
 
-    if err := r.Scan(&e.Id, &e.Url, &title, &body, &e.Email, &fTitle); err != nil {
-      Error("[DB]", err)
-      return
+    if err := r.Scan(&e.Id, &e.Url, &title, &e.Body, &e.Email, &fTitle); err != nil {
+      return err
     }
 
     if title != nil {
       e.Title = reflect.ValueOf(title).String()
-    }
-
-    if body != nil {
-      e.Body = reflect.ValueOf(body).String()
     }
 
     if fTitle != nil {
@@ -125,11 +124,13 @@ func (self *PgDB) FetchQueue(handler func(*QueueEntry)) error {
     }
 
     go handler(e)
+
+    return nil
   }, "SELECT id, url, title, body, email, feed_title FROM fetch_queue()")
 }
 
 // Queries the database and executes the callback for each row.
-func (self *PgDB) query(f func(*sql.Rows), q string, args ...interface{}) error {
+func (self *PgDB) query(f RowHandler, q string, args ...interface{}) error {
   rows, err := self.Query(q, args...)
 
   if err != nil {
@@ -138,7 +139,9 @@ func (self *PgDB) query(f func(*sql.Rows), q string, args ...interface{}) error 
   defer rows.Close()
 
   for rows.Next() {
-    f(rows)
+    if err := f(rows); err != nil {
+      Error("[DB]", err)
+    }
   }
   return rows.Err()
 }
@@ -147,19 +150,26 @@ func (self *PgDB) query(f func(*sql.Rows), q string, args ...interface{}) error 
 func (self *PgDB) info(w io.Writer, q string, args ...interface{}) (int, error) {
   i := 0
 
-  err := self.query(func(r *sql.Rows) {
+  err := self.query(func(r *sql.Rows) error {
     var info interface{}
 
     if err := r.Scan(&info); err != nil {
-      Error("[DB]", err)
-      return
+      return err
     }
 
-    if _, err := fmt.Fprintln(w, info); err != nil {
-      Error("[DB]", err)
+    if i > 0 {
+      if _, err := w.Write([]byte{'\n'}); err != nil {
+        return err
+      }
+    }
+
+    if _, err := fmt.Fprint(w, info); err != nil {
+      return err
     }
 
     i++
+
+    return nil
   }, q, args...)
 
   return i, err
