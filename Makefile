@@ -12,7 +12,8 @@ SERVER  :=  $(BUILD)/viscumd
 PKGS    :=  github.com/jteeuwen/go-pkg-xmlx  \
             github.com/ushis/gopgsqldriver   \
             code.google.com/p/goconf/conf    \
-            github.com/moovweb/gokogiri
+            github.com/moovweb/gokogiri      \
+            github.com/ushis/textmail
 
 .PHONY: all
 

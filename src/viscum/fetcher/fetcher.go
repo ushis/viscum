@@ -67,10 +67,6 @@ func (self *Fetcher) fetch(f *db.Feed) {
 
 // Handles a new entry.
 func (self *Fetcher) handleEntry(feedId int64, entry *db.Entry) error {
-  if err := Format(&entry.Body); err != nil {
-    return err
-  }
-
   if _, err := self.db.InsertEntry(feedId, entry); err != nil {
     return err
   }

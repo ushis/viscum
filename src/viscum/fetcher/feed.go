@@ -5,6 +5,7 @@ import (
   "github.com/jteeuwen/go-pkg-xmlx"
   "viscum/db"
   . "viscum/util"
+  "github.com/ushis/textmail"
 )
 
 const (
@@ -45,7 +46,13 @@ func (self *Feed) Fetch() error {
 
 // Sends new entries to the handler and registers the url.
 func (self *Feed) registerEntry(url string, title string, body string) {
-  e := &db.Entry{Url: url, Title: Titleize(title), Body: body}
+  b, err := textmail.Format([]byte(body))
+
+  if err != nil {
+    Error("[Feed]", err)
+    return
+  }
+  e := &db.Entry{Url: url, Title: Titleize(title), Body: b.String()}
 
   if err := self.entryHandler(e); err != nil {
     Error("[Feed]", err)
