@@ -43,7 +43,7 @@ func main() {
   go m.Start()
 
   // Set up the fetcher.
-  f := fetcher.New(database, m.Ctrl)
+  f := fetcher.New(database, conf, m.Ctrl)
   go f.Start()
 
   // Set up the rpc.

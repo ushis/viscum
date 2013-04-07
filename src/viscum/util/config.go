@@ -2,6 +2,8 @@ package util
 
 import (
   "code.google.com/p/goconf/conf"
+  "os"
+  "time"
 )
 
 // Default configuration
@@ -9,6 +11,9 @@ var defaults = map[string]map[string]string{
   "database": map[string]string{
     "auth":   "dbname=viscum user=viscum password=secret host=localhost port=5432",
     "driver": "postgres",
+  },
+  "feed": map[string]string{
+    "poll": "15m",
   },
   "mail": map[string]string{
     "from":          "viscum@localhost",
@@ -25,30 +30,48 @@ var defaults = map[string]map[string]string{
 }
 
 type Config struct {
-  file *conf.ConfigFile // Config file.
+  *conf.ConfigFile
 }
 
 // Reads the config file.
 func ReadConfig(name string) (*Config, error) {
-  file, err := conf.ReadConfigFile(name)
+  file, err := os.Open(name)
 
   if err != nil {
     return nil, err
   }
-  return &Config{file: file}, nil
+  defer file.Close()
+
+  c := &Config{conf.NewConfigFile()}
+
+  for sec, opt := range defaults {
+    for k, v := range opt {
+      c.AddOption(sec, k, v)
+    }
+  }
+
+  if err = c.Read(file); err != nil {
+    return nil, err
+  }
+  return c, nil
 }
 
 // Returns a config value specified by section and key.
 func (self *Config) Get(sec string, key string) string {
-  if val, err := self.file.GetString(sec, key); err == nil {
-    return val
+  val, err := self.GetString(sec, key)
+
+  if err != nil {
+    Fatal(err)
   }
-  if _, ok := defaults[sec]; !ok {
-    Fatal("Section not found:", sec)
+  return val
+}
+
+// Returns a duration.
+func (self *Config) GetDuration(sec string, key string) time.Duration {
+  val, err := time.ParseDuration(self.Get(sec, key))
+
+  if err != nil {
+    Fatal(err)
   }
-  if val, ok := defaults[sec][key]; ok {
-    return val
-  }
-  Fatal("Value not found:", sec, key)
-  return "" // Never...
+  return val
 }

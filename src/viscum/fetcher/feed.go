@@ -3,9 +3,9 @@ package fetcher
 import (
   "errors"
   "github.com/jteeuwen/go-pkg-xmlx"
+  "github.com/ushis/textmail"
   "viscum/db"
   . "viscum/util"
-  "github.com/ushis/textmail"
 )
 
 const (

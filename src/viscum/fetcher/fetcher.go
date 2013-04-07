@@ -7,14 +7,20 @@ import (
 )
 
 type Fetcher struct {
-  db         db.DB      // Database connection
-  Ctrl       chan int   // Control channel
-  MailerCtrl chan<- int // Control channel to the mailer
+  db         db.DB         // Database connection
+  poll       time.Duration // Poll interval
+  Ctrl       chan int      // Control channel
+  MailerCtrl chan<- int    // Control channel to the mailer
 }
 
 // Returns a new fetcher.
-func New(database db.DB, mc chan<- int) *Fetcher {
-  return &Fetcher{db: database, Ctrl: make(chan int), MailerCtrl: mc}
+func New(database db.DB, conf *Config, mc chan<- int) *Fetcher {
+  return &Fetcher{
+    db:         database,
+    poll:       conf.GetDuration("feed", "poll"),
+    Ctrl:       make(chan int),
+    MailerCtrl: mc,
+  }
 }
 
 // Starts fetching.
@@ -49,7 +55,7 @@ func (self *Fetcher) Stop() {
 
 // Starts fetching a new feed.
 func (self *Fetcher) fetch(f *db.Feed) {
-  Info("[Fetcher] Start fetching:", f.Url)
+  Info("[Fetcher] Start fetching", f.Url, "every", self.poll)
 
   feed := NewFeed(f, func(entry *db.Entry) error {
     return self.handleEntry(f.Id, entry)
@@ -61,7 +67,7 @@ func (self *Fetcher) fetch(f *db.Feed) {
     } else if _, err := self.db.UpdateFeed(feed.Feed); err != nil {
       Error("[Fetcher]", err)
     }
-    <-time.After(5 * time.Minute)
+    <-time.After(self.poll)
   }
 }
 
