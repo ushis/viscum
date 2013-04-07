@@ -30,7 +30,7 @@ Let's see how overengineered it is.
    notifies the Mailer about new stuff in the queue.
 
 1. The Mailer looks into the queue and sends new entries to an external
-   program (e.g. mail) or to a SMTP server.
+   program (e.g. mail) or a SMTP server.
 
 1. The RPC waits for a viscum client to add/rm subscriptions, send control
    instructions or request some info.
@@ -58,7 +58,7 @@ Edit the config ```etc/viscumd.conf```, start the server...
 
     ./build/viscum -config=etc/viscum.conf add hello@example.com https://github.com/blog.atom
 
-Arch Linux user can grab it from the
+Arch Linux users can grab it from the
 [AUR](https://aur.archlinux.org/packages/viscum-git/).
 
 ## TODO

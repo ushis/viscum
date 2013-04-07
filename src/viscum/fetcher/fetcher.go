@@ -72,10 +72,9 @@ func (self *Fetcher) fetch(f *db.Feed) {
 }
 
 // Handles a new entry.
-func (self *Fetcher) handleEntry(feedId int64, entry *db.Entry) error {
-  if _, err := self.db.InsertEntry(feedId, entry); err != nil {
-    return err
+func (self *Fetcher) handleEntry(feedId int64, entry *db.Entry) (err error) {
+  if _, err = self.db.InsertEntry(feedId, entry); err == nil {
+    self.MailerCtrl <- CTRL_RELOAD
   }
-  self.MailerCtrl <- CTRL_RELOAD
-  return nil
+  return
 }
