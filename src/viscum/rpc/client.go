@@ -2,14 +2,11 @@ package rpc
 
 import (
   "net/rpc"
-  "viscum/rpc/mem"
-  "viscum/rpc/queue"
-  "viscum/rpc/subscription"
 )
 
 type Client struct {
-  socket     string      // Socket of the rpc server
-  connection *rpc.Client // RPC connection
+  *rpc.Client        // RPC connection
+  socket      string // Socket of the rpc server
 }
 
 // Returns a new client.
@@ -20,44 +17,46 @@ func NewClient(socket string) *Client {
 // Connects to the rpc server.
 func (self *Client) Connect() (err error) {
   if len(self.socket) > 0 && self.socket[0] != '/' {
-    self.connection, err = rpc.DialHTTP("tcp", self.socket)
+    self.Client, err = rpc.DialHTTP("tcp", self.socket)
   } else {
-    self.connection, err = rpc.DialHTTP("unix", self.socket)
+    self.Client, err = rpc.DialHTTP("unix", self.socket)
   }
-  return err
-}
-
-// Disconnects from the rpc server.
-func (self *Client) Disconnect() error {
-  return self.connection.Close()
+  return
 }
 
 // Subscribes a email to a feed.
-func (self *Client) Subscribe(email string, url string) (Reply, error) {
-  return subscription.Subscribe(self.connection, email, url)
+func (self *Client) Subscribe(email string, url string) (*Reply, error) {
+  return self.call("S.Subscribe", email, url)
 }
 
 // Unsubscribes an email from a feed.
-func (self *Client) Unsubscribe(email string, url string) (Reply, error) {
-  return subscription.Unsubscribe(self.connection, email, url)
+func (self *Client) Unsubscribe(email string, url string) (*Reply, error) {
+  return self.call("S.Unsubscribe", email, url)
 }
 
 // Fetches subscription info from the server.
-func (self *Client) ListSubscriptions(email string) (Reply, error) {
-  return subscription.List(self.connection, email)
+func (self *Client) ListSubscriptions(email string) (*Reply, error) {
+  return self.call("S.ListSubscriptions", email, "")
 }
 
 // Fetches queue info from the server.
-func (self *Client) ListQueue() (Reply, error) {
-  return queue.List(self.connection)
+func (self *Client) QueueInfo() (*Reply, error) {
+  return self.call("S.QueueInfo", "", "")
 }
 
 // Attempt to send all remaining mail.
-func (self *Client) DeliverQueue() (Reply, error) {
-  return queue.Deliver(self.connection)
+func (self *Client) Deliver() (*Reply, error) {
+  return self.call("S.Deliver", "", "")
 }
 
 // Fetches mem stats from the server.
-func (self *Client) MemStats() (Reply, error) {
-  return mem.Stats(self.connection)
+func (self *Client) MemStats() (*Reply, error) {
+  return self.call("S.MemStats", "", "")
+}
+
+// Calls the server.
+func (self *Client) call(f string, email string, url string) (*Reply, error) {
+  var reply Reply
+  err := self.Call(f, &Args{Email: email, Url: url}, &reply)
+  return &reply, err
 }

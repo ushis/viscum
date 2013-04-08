@@ -2,9 +2,7 @@ package db
 
 import (
   "database/sql"
-  "fmt"
   _ "github.com/ushis/gopgsqldriver"
-  "io"
   "reflect"
   "time"
   . "viscum/util"
@@ -62,23 +60,13 @@ func (self *PgDB) Dequeue(e *QueueEntry, success bool) (sql.Result, error) {
 }
 
 // Lists all subscriptions filtered by email.
-func (self *PgDB) ListSubscriptions(w io.Writer, email string) error {
-  i, err := self.info(w, "SELECT url from subscripts WHERE email = $1", email)
-
-  if err == nil && i == 0 {
-    _, err = fmt.Fprint(w, "Couldn't find any subscriptions for: ", email)
-  }
-  return err
+func (self *PgDB) ListSubscriptions(email string) ([]string, error) {
+  return self.info("SELECT url from subscripts WHERE email = $1", email)
 }
 
 // Fetches queue info from the database.
-func (self *PgDB) QueueInfo(w io.Writer) error {
-  i, err := self.info(w, "SELECT info FROM queue_info")
-
-  if err == nil && i == 0 {
-    _, err = fmt.Fprint(w, "The queue is empty.")
-  }
-  return err
+func (self *PgDB) QueueInfo() ([]string, error) {
+  return self.info("SELECT info FROM queue_info")
 }
 
 // Fetches feeds newer than the provided timestamp and passes them to handler
@@ -147,30 +135,19 @@ func (self *PgDB) query(f RowHandler, q string, args ...interface{}) error {
 }
 
 // Fetches info from the database and writes the results to a writer.
-func (self *PgDB) info(w io.Writer, q string, args ...interface{}) (int, error) {
-  i := 0
+func (self *PgDB) info(q string, args ...interface{}) ([]string, error) {
+  var info []string
 
   err := self.query(func(r *sql.Rows) error {
-    var info interface{}
+    var inf string
 
-    if err := r.Scan(&info); err != nil {
+    if err := r.Scan(&inf); err != nil {
       return err
     }
-
-    if i > 0 {
-      if _, err := w.Write([]byte{'\n'}); err != nil {
-        return err
-      }
-    }
-
-    if _, err := fmt.Fprint(w, info); err != nil {
-      return err
-    }
-
-    i++
+    info = append(info, inf)
 
     return nil
   }, q, args...)
 
-  return i, err
+  return info, err
 }

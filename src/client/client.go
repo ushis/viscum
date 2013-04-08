@@ -18,7 +18,7 @@ func init() {
 }
 
 // Commands we handle.
-var commands = map[string]func(*rpc.Client) (rpc.Reply, error){
+var commands = map[string]func(*rpc.Client) (*rpc.Reply, error){
   "add":     subscribe,
   "rm":      unsubscribe,
   "ls":      subscriptions,
@@ -49,18 +49,22 @@ func main() {
   if err := client.Connect(); err != nil {
     util.Fatal(err)
   }
-  defer client.Disconnect()
+  defer client.Close()
 
   // Execute the command.
-  if reply, err := cmd(client); err != nil {
+  reply, err := cmd(client)
+
+  if err != nil {
     util.Fatal(err)
-  } else {
-    fmt.Println(reply.Text())
+  }
+
+  for _, line := range reply.Response() {
+    fmt.Println(line)
   }
 }
 
 // Subscribes an email to a feed.
-func subscribe(client *rpc.Client) (rpc.Reply, error) {
+func subscribe(client *rpc.Client) (*rpc.Reply, error) {
   if flag.NArg() < 3 {
     usage()
   }
@@ -68,7 +72,7 @@ func subscribe(client *rpc.Client) (rpc.Reply, error) {
 }
 
 // Unsubscribes an email from a feed.
-func unsubscribe(client *rpc.Client) (rpc.Reply, error) {
+func unsubscribe(client *rpc.Client) (*rpc.Reply, error) {
   if flag.NArg() < 3 {
     usage()
   }
@@ -76,7 +80,7 @@ func unsubscribe(client *rpc.Client) (rpc.Reply, error) {
 }
 
 // Lists all subscription filtered by email.
-func subscriptions(client *rpc.Client) (rpc.Reply, error) {
+func subscriptions(client *rpc.Client) (*rpc.Reply, error) {
   if flag.NArg() < 2 {
     usage()
   }
@@ -84,17 +88,17 @@ func subscriptions(client *rpc.Client) (rpc.Reply, error) {
 }
 
 // Fetches queue info.
-func queue(client *rpc.Client) (rpc.Reply, error) {
-  return client.ListQueue()
+func queue(client *rpc.Client) (*rpc.Reply, error) {
+  return client.QueueInfo()
 }
 
 // Attempt to process the queue.
-func deliver(client *rpc.Client) (rpc.Reply, error) {
-  return client.DeliverQueue()
+func deliver(client *rpc.Client) (*rpc.Reply, error) {
+  return client.Deliver()
 }
 
 // Fetches the servers mem stats.
-func mem(client *rpc.Client) (rpc.Reply, error) {
+func mem(client *rpc.Client) (*rpc.Reply, error) {
   return client.MemStats()
 }
 
