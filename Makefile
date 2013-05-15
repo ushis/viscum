@@ -36,9 +36,8 @@ test:
 	gd $(SRC) test
 
 install:
-	install -dm755 $(DESTDIR)/usr/sbin
-	install -m755  $(SERVER) $(DESTDIR)/usr/sbin/viscumd
 	install -dm755 $(DESTDIR)/usr/bin
+	install -m755  $(SERVER) $(DESTDIR)/usr/bin/viscumd
 	install -m755  $(CLIENT) $(DESTDIR)/usr/bin/viscum
 	install -dm755 $(DESTDIR)/usr/share/viscum
 	install -m644 -t $(DESTDIR)/usr/share/viscum share/*

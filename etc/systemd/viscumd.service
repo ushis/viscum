@@ -6,7 +6,7 @@ After=network.target postgresql.service postfix.service
 Type=simple
 User=viscum
 Group=viscum
-ExecStart=/usr/sbin/viscumd -config=/etc/viscum/viscumd.conf
+ExecStart=/usr/bin/viscumd -config=/etc/viscum/viscumd.conf
 ExecStop=/bin/kill -INT $MAINPID
 
 [Install]
